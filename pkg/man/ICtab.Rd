@@ -42,11 +42,10 @@ AICctab(\dots)
   \item{dIC}{difference in IC from minimum-IC model}
   \item{weights}{exp(-dIC/2)/sum(exp(-dIC/2))}
 }
-\note{The print method uses sensible defaults; all ICs are rounded
+\note{(1) The print method uses sensible defaults; all ICs are rounded
   to the nearest 0.1, and IC weights are printed using
   \code{\link{format.pval}} to print an inequality for
-  values <0.001.}
-\note{The computation of degrees of freedom/number of
+  values <0.001. (2) The computation of degrees of freedom/number of
   parameters (e.g., whether
   variance parameters are included in the total) varies enormously
   between packages.  As long as the df computations

@@ -253,7 +253,8 @@ mle2 <- function(minuslogl,
           v <- do.call("gr",args)
           if (length(fixed)>0) warning("gradient functions untested with profiling")
           names(v) <- names(p)
-          v <- v[-nfix]
+##           v <- v[-nfix]
+          v <- v[!names(v) %in% nfix] ## from Eric Weese
           v
         } ## end of gradient function
   ## FIXME: try to do this by assignment into appropriate
