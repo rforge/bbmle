@@ -390,7 +390,7 @@ setMethod("profile", "mle2",
           function (fitted, which = 1:p, maxsteps = 100,
                     alpha = 0.01, zmax = sqrt(qchisq(1 - alpha/2, p)),
                     del = zmax/5, trace = FALSE, skiperrs=TRUE,
-                    tol.newmin = 0.001, ...) {
+                    std.err, tol.newmin = 0.001, ...) {
             ## fitted: mle2 object
             ## which: which parameters to profile
             ## maxsteps: steps to take looking for zmax
@@ -450,7 +450,7 @@ setMethod("profile", "mle2",
             ## Profile the likelihood around its maximum
             ## Based on profile.glm in MASS
             summ <- summary(fitted)
-            std.err <- summ@coef[, "Std. Error"]
+            if (missing(std.err)) std.err <- summ@coef[, "Std. Error"]
             if (any(is.na(std.err))) {
               std.err <- sqrt(1/diag(fitted@details$hessian))
               if (any(is.na(std.err))) {
@@ -486,8 +486,10 @@ setMethod("profile", "mle2",
               if (!is.null(upper)) call$upper <- upper[-i]
               if (!is.null(lower)) call$lower <- lower[-i]
               for (sgn in c(-1, 1)) {
-                if (trace)
-                  cat("\nParameter:", p.i, c("down", "up")[(sgn + 1)/2 + 1], "\n")
+                if (trace) {
+                    cat("\nParameter:", p.i, c("down", "up")[(sgn + 1)/2 + 1], "\n")
+                    cat("par val","sqrt(dev diff)\n")
+                }
                 step <- 0
                 z <- 0
                 ## This logic was a bit frail in some cases with
@@ -508,6 +510,7 @@ setMethod("profile", "mle2",
                   if(is.na(z)) break
                   lastz <- z
                 }
+                if (step==maxsteps) warning("hit maximum number of steps")
                 if(abs(lastz) < zmax) {
                   ## now let's try a bit harder if we came up short
                   for(dstep in c(0.2, 0.4, 0.6, 0.8, 0.9)) {
@@ -877,6 +880,8 @@ function (x, levels, which=1:p, conf = c(99, 95, 90, 80, 50)/100, nseg = 50,
           show.points=FALSE,
           main, xlim, ylim, ...)
 {
+    op <- par(no.readonly=TRUE)
+    on.exit(par(op))
     ## Plot profiled likelihood
     ## Based on profile.nls (package stats)
     obj <- x@profile
@@ -894,6 +899,7 @@ function (x, levels, which=1:p, conf = c(99, 95, 90, 80, 50)/100, nseg = 50,
             rows <- ceiling(round(sqrt(nplots)))
             columns <- ceiling(nplots/rows)
             par(mfrow=c(rows,columns))
+            on.exit(par(op))
         }
     }
     confstr <- NULL
@@ -916,90 +922,90 @@ function (x, levels, which=1:p, conf = c(99, 95, 90, 80, 50)/100, nseg = 50,
       xlabs <- xl2
     }
     for (i in seq(along = nm)[which]) {
-      ## <FIXME> This does not need to be monotonic
-      ## cat("**",i,obj[[i]]$par.vals[,i],obj[[i]]$z,"\n")
-      if (missing(main)) setmain <- TRUE
-      if (setmain) {
-        main <- paste("Likelihood profile:",nm[i])
-      }
-      yvals <- obj[[i]]$par.vals[,nm[i],drop=FALSE]
-      sp <- splines::interpSpline(yvals, obj[[i]]$z,
-                                  na.action=na.omit)
-      bsp <- try(splines::backSpline(sp),silent=TRUE)
-      bsp.OK <- (class(bsp)[1]!="try-error")
-      if (bsp.OK) {
-        predfun <- function(y) { predict(bsp,y)$y }
-      } else { ## backspline failed
-        warning("non-monotonic profile: confidence limits may be unreliable")
-        ## what do we do?
-        ## attempt to use uniroot
-        predfun <- function(y) {
-          pfun0 = function(z1) {
-            t1 = try(uniroot(function(z) {
-              predict(sp,z)$y-z1
-            }, range(obj[[i]]$par.vals[,i])),silent=TRUE)
-            if (class(t1)[1]=="try-error") NA else t1$root
-          }
-          sapply(y,pfun0)
+        ## <FIXME> This does not need to be monotonic
+        ## cat("**",i,obj[[i]]$par.vals[,i],obj[[i]]$z,"\n")
+        if (missing(main)) setmain <- TRUE
+        if (setmain) {
+            main <- paste("Likelihood profile:",nm[i])
         }
-      }
-      ## </FIXME>
-      if (no.xlim) xlim <- predfun(c(-mlev, mlev))
-      if (is.na(xlim[1]))
-        xlim[1] <- min(obj[[i]]$par.vals[, i])
-      if (is.na(xlim[2]))
-        xlim[2] <- max(obj[[i]]$par.vals[, i])
-      xvals <- obj[[i]]$par.vals[,nm[i]]
-      if (absVal) {
-        if (!add) {
-          if (no.ylim) ylim <- c(0,mlev)
-          plot(abs(z) ~ xvals, data = obj[[i]],
-               xlab = nm[i],
-               ylab = if (missing(ylab)) expression(abs(z)) else ylab,
-               xlim = xlim, ylim = ylim,
-               type = "n", main=main, ...)
+        yvals <- obj[[i]]$par.vals[,nm[i],drop=FALSE]
+        sp <- splines::interpSpline(yvals, obj[[i]]$z,
+                                    na.action=na.omit)
+        bsp <- try(splines::backSpline(sp),silent=TRUE)
+        bsp.OK <- (class(bsp)[1]!="try-error")
+        if (bsp.OK) {
+            predfun <- function(y) { predict(bsp,y)$y }
+        } else { ## backspline failed
+            warning("non-monotonic profile: confidence limits may be unreliable")
+            ## what do we do?
+            ## attempt to use uniroot
+            predfun <- function(y) {
+                pfun0 = function(z1) {
+                    t1 = try(uniroot(function(z) {
+                        predict(sp,z)$y-z1
+                    }, range(obj[[i]]$par.vals[,nm[i]])),silent=TRUE)
+                    if (class(t1)[1]=="try-error") NA else t1$root
+                }
+                sapply(y,pfun0)
+            }
         }
-        avals <- rbind(as.data.frame(predict(sp)),
-                       data.frame(x = drop(yvals), y = obj[[i]]$z))
-        avals$y <- abs(avals$y)
-        lines(avals[order(avals$x), ], col = col.prof, lty=lty.prof)
-        if (show.points) points(yvals,abs(obj[[i]]$z))
-      } else { ## not absVal
-          if (!add) {
-            if (no.ylim) ylim <- c(-mlev,mlev)
-            plot(z ~ xvals, data = obj[[i]], xlab = nm[i],
-                 ylim = ylim, xlim = xlim,
-                 ylab = if (missing(ylab)) expression(z) else ylab,
-                 type = "n", main=main, ...)
-          }
-          lines(predict(sp), col = col.prof, lty=lty.prof)
-          if (show.points) points(yvals,obj[[i]]$z)
+        ## </FIXME>
+        if (no.xlim) xlim <- predfun(c(-mlev, mlev))
+        xvals <- obj[[i]]$par.vals[,nm[i]]
+        if (is.na(xlim[1]))
+          xlim[1] <- min(xvals)
+        if (is.na(xlim[2]))
+          xlim[2] <- max(xvals)
+        if (absVal) {
+            if (!add) {
+                if (no.ylim) ylim <- c(0,mlev)
+                plot(abs(z) ~ xvals, data = obj[[i]],
+                     xlab = nm[i],
+                     ylab = if (missing(ylab)) expression(abs(z)) else ylab,
+                     xlim = xlim, ylim = ylim,
+                     type = "n", main=main, ...)
+            }
+            avals <- rbind(as.data.frame(predict(sp)),
+                           data.frame(x = drop(yvals), y = obj[[i]]$z))
+            avals$y <- abs(avals$y)
+            lines(avals[order(avals$x), ], col = col.prof, lty=lty.prof)
+            if (show.points) points(yvals,abs(obj[[i]]$z))
+        } else { ## not absVal
+            if (!add) {
+                if (no.ylim) ylim <- c(-mlev,mlev)
+                plot(z ~ xvals, data = obj[[i]], xlab = nm[i],
+                     ylim = ylim, xlim = xlim,
+                     ylab = if (missing(ylab)) expression(z) else ylab,
+                     type = "n", main=main, ...)
+            }
+            lines(predict(sp), col = col.prof, lty=lty.prof)
+            if (show.points) points(yvals,obj[[i]]$z)
         }
-      x0 <- predfun(0)
-      abline(v = x0, h=0, col = col.minval, lty = lty.minval)
-      for (j in 1:length(levels)) {
-        lev <- levels[j]
-        confstr.lev <- confstr[j]
-        ## Note: predict may return NA if we didn't profile
-          ## far enough in either direction. That's OK for the
-          ## "h" part of the plot, but the horizontal line made
-          ## with "l" disappears.
-          pred <- predfun(c(-lev, lev))
-          ## horizontal
-          if (absVal) levs=rep(lev,2) else levs=c(-lev,lev)
-          lines(pred, levs, type = "h", col = col.conf, lty = 2)
-          ## vertical
-          pred <- ifelse(is.na(pred), xlim, pred)
-          if (absVal) {
-            lines(pred, rep(lev, 2), type = "l", col = col.conf, lty = lty.conf)
-          } else {
-            lines(c(x0,pred[2]), rep(lev, 2), type = "l", col = col.conf, lty = lty.conf)
-            lines(c(pred[1],x0), rep(-lev, 2), type = "l", col = col.conf, lty = lty.conf)
-          }
-        if (plot.confstr) {
-          text(labels=confstr.lev,x=x0,y=lev,col=col.conf)
-        }
-      } ## loop over levels
+        x0 <- predfun(0)
+        abline(v = x0, h=0, col = col.minval, lty = lty.minval)
+        for (j in 1:length(levels)) {
+            lev <- levels[j]
+            confstr.lev <- confstr[j]
+            ## Note: predict may return NA if we didn't profile
+            ## far enough in either direction. That's OK for the
+            ## "h" part of the plot, but the horizontal line made
+            ## with "l" disappears.
+            pred <- predfun(c(-lev, lev))
+            ## horizontal
+            if (absVal) levs=rep(lev,2) else levs=c(-lev,lev)
+            lines(pred, levs, type = "h", col = col.conf, lty = 2)
+            ## vertical
+            pred <- ifelse(is.na(pred), xlim, pred)
+            if (absVal) {
+                lines(pred, rep(lev, 2), type = "l", col = col.conf, lty = lty.conf)
+            } else {
+                lines(c(x0,pred[2]), rep(lev, 2), type = "l", col = col.conf, lty = lty.conf)
+                lines(c(pred[1],x0), rep(-lev, 2), type = "l", col = col.conf, lty = lty.conf)
+            }
+            if (plot.confstr) {
+                text(labels=confstr.lev,x=x0,y=lev,col=col.conf)
+            }
+        } ## loop over levels
     } ## loop over variables
     ## par(opar)
   })
@@ -1040,7 +1046,8 @@ function (object, parm, level = 0.95, trace=FALSE, ...)
 
 setMethod("confint", "mle2",
 function (object, parm, level = 0.95, method,
-          trace=FALSE,quietly=!interactive(),...)
+          trace=FALSE,quietly=!interactive(),
+          tol.newmin=0.001,...)
 {
   if (missing(method)) method <- mle2.options("confint")
   ## changed coef() calls to object@coef -- really *don't* want fullcoef!
@@ -1051,8 +1058,13 @@ function (object, parm, level = 0.95, method,
   if (any(is.na(parm))) stop("parameters not found in model coefficients")
   if (method=="spline") {
     if (!quietly) cat("Profiling...\n")
-    prof = try(profile(object,which=parm))
+    prof = try(profile(object,which=parm,tol.newmin=tol.newmin))
     if (inherits(prof,"try-error")) stop(paste("Problem with profiling:",prof))
+    if (is.numeric(prof)) {
+        ## assume profiling trapped an error and returns better parameters
+        cat("stopping confidence interval calculation\n")
+        return(prof)
+    }
     return(confint(prof, parm, level, ...))
   } else {
     B0 <- object@coef
@@ -1086,7 +1098,7 @@ function (object, parm, level = 0.95, method,
             }
             else {
               zz <- 2*pfit@min - 2*(-logLik(object))
-              if (zz > -0.001)
+              if (zz > -tol.newmin)
                 zz <- max(zz, 0)
               else
                 stop(sprintf("profiling has found a better solution (old deviance=%1.4g, new deviance=%1.4g), so original fit had not converged",2*pfit@min,2*(-logLik(object))))
@@ -1195,8 +1207,9 @@ slice <- function(fitted, ...) UseMethod("slice")
 
 setMethod("slice", "mle2",    
 function (fitted, which = 1:p, maxsteps = 100,
-                          alpha = 0.01, zmax = sqrt(qchisq(1 - alpha/2, p)),
-                          del = zmax/5, trace = FALSE, ...)
+          alpha = 0.01, zmax = sqrt(qchisq(1 - alpha/2, p)),
+          del = zmax/5, trace = FALSE,
+          tol.newmin=0.001, ...)
 {
     onestep <- function(step)
     {
@@ -1212,7 +1225,7 @@ function (fitted, which = 1:p, maxsteps = 100,
             ri <- pv0
             ri[, names(pfit@coef)] <- pfit@coef
             ri[, p.i] <- bi
-            if (zz > -0.001)
+            if (zz > -tol.newmin)
                 zz <- max(zz, 0)
             else stop("profiling has found a better solution, so original fit had not converged")
             z <- sgn * sqrt(zz)

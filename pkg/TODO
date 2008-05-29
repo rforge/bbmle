@@ -1,12 +1,13 @@
 BUGS/ISSUES:
+ 
+  use numDeriv library hessian() function instead of nlme?
 
-use numDeriv library hessian() function instead of nlme?
+  should print warning immediately if convergence fails
 
-should print warning immediately if convergence fails
+  order of parameters matters for L-BFGS-B
 
-order of parameters matters for L-BFGS-B
-
-should optim detect unknown controls???
+  adjusting parameter vectors for lower, upper, parscale, ...
+    when some params are fixed ...
 
 
 TO DO:

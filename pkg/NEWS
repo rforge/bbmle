@@ -1,3 +1,10 @@
+devel:
+* added tol.newmin to 
+* added check for numeric return from profile within confint
+* fixed bugs in profile plotting when profile is restricted
+   to a subset of variables
+* added tests for par() to reset to original on exit
+
 0.8.7  12/05/2008
 * version bump, moved to R-forge.
 * reordered NEWS file (most recent first)
