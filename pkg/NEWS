@@ -1,5 +1,6 @@
 devel:
-* added tol.newmin to 
+* added an instance of "namedrop" to fix naming problem
+* added tol.newmin to slice etc.
 * added check for numeric return from profile within confint
 * fixed bugs in profile plotting when profile is restricted
    to a subset of variables

@@ -235,7 +235,8 @@ mle2 <- function(minuslogl,
     ## eval in environment of minuslogl???
     ## doesn't help, environment(minuslogl) is empty by this time
     ## cat("e3:",length(ls(envir=environment(minuslogl))),"\n")
-    do.call("minuslogl",args)
+    ## hack to remove unwanted names ...
+    do.call("minuslogl",namedrop(args))
   } ## end of objective function
   objectivefunctiongr <-
     if (missing(gr)) NULL else
@@ -390,7 +391,7 @@ setMethod("profile", "mle2",
           function (fitted, which = 1:p, maxsteps = 100,
                     alpha = 0.01, zmax = sqrt(qchisq(1 - alpha/2, p)),
                     del = zmax/5, trace = FALSE, skiperrs=TRUE,
-                    std.err, tol.newmin = 0.001, ...) {
+                    std.err, tol.newmin = 0.001, debug=FALSE, ...) {
             ## fitted: mle2 object
             ## which: which parameters to profile
             ## maxsteps: steps to take looking for zmax
@@ -404,48 +405,54 @@ setMethod("profile", "mle2",
             if (is.character(which)) which <- match(which,Pnames)
             if (any(is.na(which)))
               stop("parameters not found in model coefficients")
+            ## global flag for better fit found inside profile fit
             newpars_found <- FALSE
+            if (debug) cat("i","bi","B0[i]","sgn","step","del","std.err[i]","\n")
             onestep <- function(step,bi) {
-              if (missing(bi)) bi <- B0[i] + sgn * step * del * std.err[i]
-              fix <- list(bi)
-              names(fix) <- p.i
-              if (is.null(call$fixed)) call$fixed <- fix
-              else call$fixed <- c(eval(call$fixed),fix)
-              if (skiperrs) {
-                pfit <- try(eval.parent(call, 2), silent=TRUE)
-              } else {
-                pfit <- eval.parent(call, 2)
-              }
-              if(skiperrs && inherits(pfit, "try-error")) {
-                warning(paste("Error encountered in profile:",pfit))
-                return(NA)
-              }
-              else {
-                zz <- 2*(pfit@min - fitted@min)
-                ri <- pv0
-                ri[, names(pfit@coef)] <- pfit@coef
-                ri[, p.i] <- bi
-                if (zz > -tol.newmin)
-                  zz <- max(zz, 0)
-                else {
-                  cat("Profiling has found a better solution, so original fit had not converged:\n")
-                  cat(sprintf("(old deviance=%1.4g, new deviance=%1.4g)",
-                              2*pfit@min,2*fitted@min),"\n")
-                  cat("Returning new parameters ...\n")
-                  ## need to return parameters all the way up
-                  ##   to top level
-                  newpars_found <<- TRUE
-                  return(pfit@fullcoef)
-                  ## cat("Parameter values:\n")
-                  ## print(pfit@fullcoef)
-                  ## stop("try restarting fit from values above")
+                if (missing(bi)) {
+                    bi <- B0[i] + sgn * step * del * std.err[i]
+                    if (debug) cat(i,bi,B0[i],sgn,step,del,std.err[i],"\n")
+                } else if (debug) cat(bi,"\n")
+                fix <- list(bi)
+                names(fix) <- p.i
+                if (is.null(call$fixed)) call$fixed <- fix
+                else call$fixed <- c(eval(call$fixed),fix)
+                if (skiperrs) {
+                    pfit <- try(eval.parent(call, 2), silent=TRUE)
+                } else {
+                    pfit <- eval.parent(call, 2)
                 }
-                z <- sgn * sqrt(zz)
-                pvi <<- rbind(pvi, ri)
-                zi <<- c(zi, z)
-              }
-              if (trace) cat(bi, z, "\n")
-              z
+                ok <- ! inherits(pfit,"try-error")
+                if (debug && ok) cat(coef(pfit),-logLik(pfit),"\n")
+                if(skiperrs && !ok) {
+                    warning(paste("Error encountered in profile:",pfit))
+                    return(NA)
+                }
+                else {
+                    zz <- 2*(pfit@min - fitted@min)
+                    ri <- pv0
+                    ri[, names(pfit@coef)] <- pfit@coef
+                    ri[, p.i] <- bi
+                    if (zz > tol.newmin)
+                      zz <- max(zz, 0)
+                    else {
+                        cat("Profiling has found a better solution,",
+                            "so original fit had not converged:\n")
+                        cat(sprintf("(new deviance=%1.4g, old deviance=%1.4g)",
+                                    2*pfit@min,2*fitted@min),"\n")
+                        cat("Returning better fit ...\n")
+                        ## need to return parameters all the way up
+                        ##   to top level
+                        newpars_found <<- TRUE
+                        ## return(pfit@fullcoef)
+                        return(pfit) ## return full fit
+                    }
+                    z <- sgn * sqrt(zz)
+                    pvi <<- rbind(pvi, ri)
+                    zi <<- c(zi, z)
+                }
+                if (trace) cat(bi, z, "\n")
+                z
             } ## end onestep
             ## Profile the likelihood around its maximum
             ## Based on profile.glm in MASS
@@ -512,17 +519,20 @@ setMethod("profile", "mle2",
                 }
                 if (step==maxsteps) warning("hit maximum number of steps")
                 if(abs(lastz) < zmax) {
-                  ## now let's try a bit harder if we came up short
-                  for(dstep in c(0.2, 0.4, 0.6, 0.8, 0.9)) {
+                    if (debug) cat("haven't got to zmax yet, trying harder\n")
+                    ## now let's try a bit harder if we came up short
+                    for(dstep in c(0.2, 0.4, 0.6, 0.8, 0.9)) {
                     curval <- B0[i] + sgn * (step-1+dstep) * del * std.err[i]
                     if ((sgn==-1 & curval<lbound) ||
                       (sgn==1 && curval>ubound)) break
                     z <- onestep(step - 1 + dstep)
+                    if (newpars_found) return(z)
                     if(is.na(z) || abs(z) > zmax) break
                     lastz <- z
                   }
                   if ((abs(lastz) < zmax) &&
                       ((sgn==-1 && lbound>-Inf) || (sgn==1 && ubound<Inf))) {
+                      if (debug) cat("bounded and didn't make it, try at boundary\n")
                     ## bounded and didn't make it, try at boundary
                     if (sgn==-1 && B0[i]>lbound) onestep(bi=lbound)
                     if (sgn==1  && B0[i]<ubound) onestep(bi=ubound)
@@ -959,7 +969,7 @@ function (x, levels, which=1:p, conf = c(99, 95, 90, 80, 50)/100, nseg = 50,
         if (absVal) {
             if (!add) {
                 if (no.ylim) ylim <- c(0,mlev)
-                plot(abs(z) ~ xvals, data = obj[[i]],
+                plot(abs(obj[[i]]$z) ~ xvals, 
                      xlab = nm[i],
                      ylab = if (missing(ylab)) expression(abs(z)) else ylab,
                      xlim = xlim, ylim = ylim,
@@ -973,7 +983,7 @@ function (x, levels, which=1:p, conf = c(99, 95, 90, 80, 50)/100, nseg = 50,
         } else { ## not absVal
             if (!add) {
                 if (no.ylim) ylim <- c(-mlev,mlev)
-                plot(z ~ xvals, data = obj[[i]], xlab = nm[i],
+                plot(obj[[i]]$z ~ xvals,  xlab = nm[i],
                      ylim = ylim, xlim = xlim,
                      ylab = if (missing(ylab)) expression(z) else ylab,
                      type = "n", main=main, ...)
@@ -1058,11 +1068,12 @@ function (object, parm, level = 0.95, method,
   if (any(is.na(parm))) stop("parameters not found in model coefficients")
   if (method=="spline") {
     if (!quietly) cat("Profiling...\n")
+    newpars_found <- FALSE
     prof = try(profile(object,which=parm,tol.newmin=tol.newmin))
     if (inherits(prof,"try-error")) stop(paste("Problem with profiling:",prof))
-    if (is.numeric(prof)) {
-        ## assume profiling trapped an error and returns better parameters
-        cat("stopping confidence interval calculation\n")
+    if (newpars_found) {
+        ## profiling found a better fit
+        cat("returning better fit\n")
         return(prof)
     }
     return(confint(prof, parm, level, ...))
@@ -1101,7 +1112,7 @@ function (object, parm, level = 0.95, method,
               if (zz > -tol.newmin)
                 zz <- max(zz, 0)
               else
-                stop(sprintf("profiling has found a better solution (old deviance=%1.4g, new deviance=%1.4g), so original fit had not converged",2*pfit@min,2*(-logLik(object))))
+                stop(sprintf("profiling has found a better solution (old deviance=%.2f, new deviance=%.2f), so original fit had not converged",2*pfit@min,2*(-logLik(object))))
               z <- zz - chisqcutoff
             }
             if (trace) cat(bi, z, "\n")

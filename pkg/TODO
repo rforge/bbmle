@@ -9,6 +9,8 @@ BUGS/ISSUES:
   adjusting parameter vectors for lower, upper, parscale, ...
     when some params are fixed ...
 
+  sort out names BS -- when can we safely remove names?
+
 
 TO DO:
 
