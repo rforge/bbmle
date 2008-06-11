@@ -392,12 +392,15 @@ setMethod("profile", "mle2",
                     alpha = 0.01, zmax = sqrt(qchisq(1 - alpha/2, p)),
                     del = zmax/5, trace = FALSE, skiperrs=TRUE,
                     std.err, tol.newmin = 0.001, debug=FALSE, ...) {
-            ## fitted: mle2 object
-            ## which: which parameters to profile
-            ## maxsteps: steps to take looking for zmax
-            ## alpha: max alpha level
-            ## zmax: log-likelihood difference
-            ## del: stepsize
+              ## fitted: mle2 object
+              ## which: which parameters to profile (numeric or char)
+              ## maxsteps: steps to take looking for zmax
+              ## alpha: max alpha level
+              ## zmax: max log-likelihood difference to search to
+              ## del: stepsize
+              ## trace:
+              ## skiperrs:
+              
             if (fitted@optimizer=="constrOptim")
               stop("profiling not yet working for constrOptim -- sorry")
             Pnames <- names(fitted@coef)
@@ -457,7 +460,16 @@ setMethod("profile", "mle2",
             ## Profile the likelihood around its maximum
             ## Based on profile.glm in MASS
             summ <- summary(fitted)
-            if (missing(std.err)) std.err <- summ@coef[, "Std. Error"]
+            if (missing(std.err)) {
+                std.err <- summ@coef[, "Std. Error"]
+            } else {
+                n <- length(summ@coef)
+                if (length(std.err)<n)
+                  std.err <- rep(std.err,length.out=length(summ@coef))
+                if (any(is.na(std.err)))
+                  std.err[is.na(std.err)] <- summ@coef[is.na(std.err)]
+            }
+            ## if (!missing(std.err)) browser()
             if (any(is.na(std.err))) {
               std.err <- sqrt(1/diag(fitted@details$hessian))
               if (any(is.na(std.err))) {
@@ -1469,3 +1481,29 @@ prefix = "", simplify = TRUE,
         y <- unlist(y)
     y
   }
+
+## translate from profile to data frame, as either
+## S3 or S4 method
+as.data.frame.profile.mle2 <- function(x, row.names = NULL,
+                                       optional = FALSE, ...) {
+    m1 <- mapply(function(vals,parname) {
+        ## need to unpack the vals data frame so that
+        ## parameter names show up properly
+        do.call("data.frame",
+                c(list(param=rep(parname,nrow(vals))),
+                  as.list(vals)))},
+                 x@profile,
+                 as.list(names(x@profile)),
+                 SIMPLIFY=FALSE)
+    m2 <- do.call("rbind",m1)
+    m2
+}
+
+setAs("profile.mle2","data.frame",
+      function(from) {
+          as.data.frame.profile.mle2(from)
+          })
+
+
+
+

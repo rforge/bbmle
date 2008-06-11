@@ -16,7 +16,7 @@ Objects can be created by calls of the form \code{new("profile.mle2",
     \item{\code{profile}:}{Object of class \code{"list"}. List of
       profiles, one for each requested parameter. Each profile is a data
       frame with the first column called \code{z} being the signed square
-      root of the -2 log likelihood ratio, and the others being the
+      root of the deviance, and the others being the
       parameters with names prefixed by \code{par.vals.}}
     \item{\code{summary}:}{Object of class \code{"summary.mle2"}. Summary
       of object being profiled.}
@@ -36,7 +36,5 @@ Objects can be created by calls of the form \code{new("profile.mle2",
 \seealso{
   \code{\link{mle2}}, \code{\link{mle2-class}}, \code{\link{summary.mle2-class}} 
 }
-\examples{
 
-}
 \keyword{classes}
