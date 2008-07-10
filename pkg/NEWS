@@ -1,4 +1,6 @@
-devel:
+0.8.8  10/07/2008
+* added flexibility for profile plotting (main, x labels etc.);
+    added examples
 * added an instance of "namedrop" to fix naming problem
 * added tol.newmin to slice etc.
 * added check for numeric return from profile within confint
@@ -7,7 +9,8 @@ devel:
 * added tests for par() to reset to original on exit
 * improved profile documentation
 * replicate std.err if specified in profile
-* add as.data.frame example
+* add as.data.frame 
+* tweak tol.newmin (better fit found during profile) code
 
 0.8.7  12/05/2008
 * version bump, moved to R-forge.

@@ -432,23 +432,32 @@ setMethod("profile", "mle2",
                     return(NA)
                 }
                 else {
+                    ## pfit is current (profile) fit,
+                    ##   fitted is original fit
+                    ## pfit@min _should_ be > fitted@min
+                    ## thus zz below should be <0
                     zz <- 2*(pfit@min - fitted@min)
                     ri <- pv0
                     ri[, names(pfit@coef)] <- pfit@coef
                     ri[, p.i] <- bi
-                    if (zz > tol.newmin)
-                      zz <- max(zz, 0)
-                    else {
-                        cat("Profiling has found a better solution,",
-                            "so original fit had not converged:\n")
-                        cat(sprintf("(new deviance=%1.4g, old deviance=%1.4g)",
-                                    2*pfit@min,2*fitted@min),"\n")
-                        cat("Returning better fit ...\n")
-                        ## need to return parameters all the way up
-                        ##   to top level
-                        newpars_found <<- TRUE
-                        ## return(pfit@fullcoef)
-                        return(pfit) ## return full fit
+                    ##cat(2*pfit@min,2*fitted@min,zz,
+                    ##   tol.newmin,zz<(-tol.newmin),"\n")
+                    if (zz<0) {
+                        if (zz > (-tol.newmin)) {
+                            zz <- 0
+                        } else {
+                            ## browser()
+                            cat("Profiling has found a better solution,",
+                                "so original fit had not converged:\n")
+                            cat(sprintf("(new deviance=%1.4g, old deviance=%1.4g, diff=%1.4g)",
+                                        2*pfit@min,2*fitted@min,2*(pfit@min-fitted@min)),"\n")
+                            cat("Returning better fit ...\n")
+                            ## need to return parameters all the way up
+                            ##   to top level
+                            newpars_found <<- TRUE
+                            ## return(pfit@fullcoef)
+                            return(pfit) ## return full fit
+                        }
                     }
                     z <- sgn * sqrt(zz)
                     pvi <<- rbind(pvi, ri)
@@ -943,13 +952,13 @@ function (x, levels, which=1:p, conf = c(99, 95, 90, 80, 50)/100, nseg = 50,
       xl2[which] <- xlabs
       xlabs <- xl2
     }
+    if (missing(main)) 
+      main <- paste("Likelihood profile:",nm)
+    main <- rep(main,length=length(nm))
     for (i in seq(along = nm)[which]) {
         ## <FIXME> This does not need to be monotonic
         ## cat("**",i,obj[[i]]$par.vals[,i],obj[[i]]$z,"\n")
-        if (missing(main)) setmain <- TRUE
-        if (setmain) {
-            main <- paste("Likelihood profile:",nm[i])
-        }
+        ## FIXME: reconcile this with confint!
         yvals <- obj[[i]]$par.vals[,nm[i],drop=FALSE]
         sp <- splines::interpSpline(yvals, obj[[i]]$z,
                                     na.action=na.omit)
@@ -982,10 +991,10 @@ function (x, levels, which=1:p, conf = c(99, 95, 90, 80, 50)/100, nseg = 50,
             if (!add) {
                 if (no.ylim) ylim <- c(0,mlev)
                 plot(abs(obj[[i]]$z) ~ xvals, 
-                     xlab = nm[i],
+                     xlab = xlabs[i],
                      ylab = if (missing(ylab)) expression(abs(z)) else ylab,
                      xlim = xlim, ylim = ylim,
-                     type = "n", main=main, ...)
+                     type = "n", main=main[i], ...)
             }
             avals <- rbind(as.data.frame(predict(sp)),
                            data.frame(x = drop(yvals), y = obj[[i]]$z))
@@ -995,10 +1004,10 @@ function (x, levels, which=1:p, conf = c(99, 95, 90, 80, 50)/100, nseg = 50,
         } else { ## not absVal
             if (!add) {
                 if (no.ylim) ylim <- c(-mlev,mlev)
-                plot(obj[[i]]$z ~ xvals,  xlab = nm[i],
+                plot(obj[[i]]$z ~ xvals,  xlab = xlabs[i],
                      ylim = ylim, xlim = xlim,
                      ylab = if (missing(ylab)) expression(z) else ylab,
-                     type = "n", main=main, ...)
+                     type = "n", main=main[i], ...)
             }
             lines(predict(sp), col = col.prof, lty=lty.prof)
             if (show.points) points(yvals,obj[[i]]$z)
@@ -1491,7 +1500,8 @@ as.data.frame.profile.mle2 <- function(x, row.names = NULL,
         ## parameter names show up properly
         do.call("data.frame",
                 c(list(param=rep(parname,nrow(vals))),
-                  as.list(vals)))},
+                  as.list(vals),focal=list(vals$par.vals[,parname])))
+            },
                  x@profile,
                  as.list(names(x@profile)),
                  SIMPLIFY=FALSE)
