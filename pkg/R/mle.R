@@ -68,11 +68,11 @@ calc_mle2_function <- function(formula,parameters,
         vposvals <- cumsum(sapply(parnames,length))
         ## fill out start vectors with zeros or replicates as appropriate
         if (length(start[[vname]])==1) {
-          if (length(grep("-1",models[i])>0)) {
-            start[[vname]] <- rep(start[[vname]],length(pnames))
-          } else {
-            start[[vname]] <- c(start[[vname]],rep(0,length(pnames)-1))
-          }
+            if (length(grep("-1",models[i])>0)) {
+                start[[vname]] <- rep(start[[vname]],length(pnames))
+            } else {
+                start[[vname]] <- c(start[[vname]],rep(0,length(pnames)-1))
+            }
         }
         ## fix: what if parameters are already correctly specified?
         startpos <- if (vpos0==1) 1 else vposvals[vpos0-1]+1
