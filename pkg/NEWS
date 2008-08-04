@@ -1,3 +1,6 @@
+devel:
+* added predict method
+
 0.8.8  10/07/2008
 * added flexibility for profile plotting (main, x labels etc.);
     added examples

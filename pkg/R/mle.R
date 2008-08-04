@@ -1,6 +1,13 @@
 require(methods)  ## for independence from stats4
 ## require(nlme) ## for fdHess() ## argh.  BIC conflict.
 
+call.to.char <- function(x) {
+    ## utility function
+    x <- as.list(x)
+    if (length(x)>1) x <- x[c(2,1,3)]
+    paste(sapply(x,as.character),collapse="")
+}
+
 setClass("mle2", representation(call = "language",
                                 call.orig = "language",
                                 coef = "numeric",
@@ -37,11 +44,6 @@ calc_mle2_function <- function(formula,parameters,
   parnames <- as.list(names(start))
   names(parnames) <- names(start)
   ## hack
-  call.to.char <- function(x) {
-    x = as.list(x)
-    if (length(x)>1) x <- x[c(2,1,3)]
-    paste(sapply(x,as.character),collapse="")
-  }
   if (!missing(parameters)) {
     vars <- as.character(sapply(parameters,"[[",2))
     if (length(parameters)>1) {
