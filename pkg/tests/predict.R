@@ -1,7 +1,4 @@
 library(bbmle)
-source("~/lib/R/pkgs/bbmle/pkg/R/dists.R")
-source("~/lib/R/pkgs/bbmle/pkg/R/predict.R")
-source("~/lib/R/pkgs/bbmle/pkg/R/mle.R")
 set.seed(1002)
 lymax <- c(0,2)
 lhalf <- 0
