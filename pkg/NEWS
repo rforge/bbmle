@@ -1,3 +1,9 @@
+devel:
+*  fix Tom Hobbs bug: named lower/upper/parscale/ndeps
+get rearranged properly, otherwise rearrange in order
+of "start" and issue a warning
+* documentation tweak for S4 as.data.frame
+
 0.8.9 04/08/2008
 * version bump, submit to CRAN
 * added predict method
