@@ -1,5 +1,5 @@
 BUGS/ISSUES:
- 
+
   use numDeriv library hessian() function instead of nlme::fdHess?
 (use nlme::fdHess to avoid loading whole package?)
 

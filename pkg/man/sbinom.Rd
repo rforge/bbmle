@@ -2,6 +2,7 @@
 \alias{sbinom}
 \alias{spois}
 \alias{snbinom}
+\alias{sbeta}
 \title{Abstract definitions of distributions}
 \description{
   Functions returning values for summary statistics
@@ -11,11 +12,14 @@
 sbinom(size,prob)
 snbinom(size, prob, mu)
 spois(lambda)
+sbeta(shape1,shape2)
 }
 \arguments{
   \item{prob}{probability as defined for \code{dbinom} or \code{dnbinom}}
   \item{size}{size/variance parameter as defined for \code{dnbinom}}
   \item{mu}{mean parameter as defined for \code{dnbinom}}
+ \item{shape1}{shape parameter for \code{dbeta}}
+ \item{shape2}{shape parameter for \code{dbeta}}
   \item{lambda}{rate parameter as defined for \code{dpois}}
 }
 \value{
@@ -33,4 +37,9 @@ spois(lambda)
   sbinom(prob=0.2,size=10)
   snbinom(mu=2,size=1.2)
 }
+\note{these definitions are tentative, subject to change
+as I figure this out better.  Perhaps construct functions
+that return functions? Strip down results? Do more
+automatically?}
+
 \keyword{misc}

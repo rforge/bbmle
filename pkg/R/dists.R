@@ -8,6 +8,16 @@ sbinom <- function(size,prob) {
        sd=sqrt(size*prob*(1-prob)))
 }
 
+sbeta <- function(shape1,shape2) {
+  list(title="Beta",
+       shape1=shape1,shape2=shape2,
+       mean=shape1/(shape1+shape2),
+       median=qbeta(0.5,shape1,shape2),
+       mode=NA,
+       variance=shape1*shape2/((shape1+shape2)^2*(shape1+shape2+1)),
+       sd=sqrt(shape1*shape2/((shape1+shape2)^2*(shape1+shape2+1))))
+}
+
 snbinom <- function(size,prob,mu) {
     if (missing(mu) && !missing(prob)) {
         mupar <- FALSE

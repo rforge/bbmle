@@ -338,6 +338,8 @@ mle2 <- function(minuslogl,
   ## so use default hessian=FALSE and compute them later
   ## n.b. this is not using parscale information
   if (optimizer %in% c("nlminb","constrOptim") && !skip.hessian) {
+    if (!require(nlme,quietly=TRUE))
+      stop("need nlme package to compute Hessians for nlminb or constrOptim")
     oout$hessian <- nlme::fdHess(oout$par,objectivefunction)$Hessian
     oout$hessian[lower.tri(oout$hessian)] <- t(oout$hessian)[lower.tri(oout$hessian)]
     ## print(oout$hessian)
