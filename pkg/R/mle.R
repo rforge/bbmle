@@ -629,6 +629,7 @@ ICtab <- function(...,type=c("AIC","BIC","AICc","qAIC","qAICc"),
       nobs <- sapply(L,attr,"nobs")
       if (length(unique(nobs))>1)
         stop("nobs different: must have identical data for all objects")
+      nobs <- nobs[1]
     }
   }
   ICs <- switch(type,

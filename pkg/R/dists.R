@@ -1,3 +1,4 @@
+
 sbinom <- function(size,prob) {
   list(title="Binomial",
        prob=prob,size=size,

@@ -11,6 +11,7 @@ BUGS/ISSUES:
 treating profiled value as fixed ...
 
 BUG:   order of parameters matters for L-BFGS-B
+  (fixed)
 
   adjusting parameter vectors for lower, upper, parscale, ...
     when some params are fixed ...
@@ -19,6 +20,8 @@ BUG:   order of parameters matters for L-BFGS-B
 
 
 TO DO:
+
+model-averaging?
 
 more documentation -- especially S4 methods!
    especially:
@@ -30,6 +33,7 @@ catch/interpret more error messages?
   (try to filter last.warning?)
 
 add DIC to IC tabs?
+lmer?
 
 WISHLIST:
 start as FUNCTION (i.e., self-start)
