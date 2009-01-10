@@ -8,6 +8,22 @@ call.to.char <- function(x) {
     paste(sapply(x,as.character),collapse="")
 }
 
+setAs("mle","mle2", function(from,to) {
+  new("mle2",
+      call=from@call,
+      call.orig=from@call,
+      coef=from@coef,
+      fullcoef=from@fullcoef,
+      vcov=from@vcov,
+      min=from@min,
+      details=from@details,
+      minuslogl=from@minuslogl,
+      method=from@method,
+      data=list(),
+      formula="",
+      optimizer="optim")
+})
+                
 setClass("mle2", representation(call = "language",
                                 call.orig = "language",
                                 coef = "numeric",
@@ -534,8 +550,8 @@ setMethod("profile", "mle2",
             parscale <- eval.parent(call$control$parscale)
             upper <- eval.parent(call$upper)
             lower <- eval.parent(call$lower)
-            cat("upper\n")
-            print(upper)
+            ## cat("upper\n")
+            ## print(upper)
             for (i in which) {
               zi <- 0
               pvi <- pv0
@@ -707,10 +723,10 @@ AICctab <- function(...) {
   ICtab(...,mnames=get.mnames(match.call()),type="AICc")
 }
 
-setGeneric("AICc", function(object, ..., nobs) standardGeneric("AICc"))
+setGeneric("AICc", function(object, ..., nobs, k=2) standardGeneric("AICc"))
 
 setMethod("AICc", "mle2",
-          function (object, ..., nobs)  {
+          function (object, ..., nobs, k)  {
             L <- list(...)
             if (length(L)) {
               L <- c(list(object),L)
@@ -730,19 +746,20 @@ setMethod("AICc", "mle2",
           })
 
 setMethod("AICc", signature(object="logLik"),
-function(object, ..., nobs){
+function(object, ..., nobs, k){
   if (missing(nobs)) {
     if (is.null(attr(object,"nobs")))
       stop("number of observations not specified")
     nobs <- attr(object,"nobs")
   }
   df <- attr(object,"df")
-  -2 * c(object) + 2*df+2*df*(df+1)/(nobs-df-1)
+  ## FIXME: should second "2" also be k?
+  -2 * c(object) + k*df+2*df*(df+1)/(nobs-df-1)
 })
 
 setMethod("AICc", signature(object="ANY"),
-function(object, ..., nobs){
-  AICc(object=logLik(object, ...), nobs=nobs)
+function(object, ..., nobs, k){
+  AICc(object=logLik(object, ...), nobs=nobs, k=k)
 })
 
 setMethod("AIC", "mle2",
@@ -760,16 +777,16 @@ setMethod("AIC", "mle2",
 
 ### quasi- methods
 
-setGeneric("qAICc", function(object, ..., nobs, dispersion)
+setGeneric("qAICc", function(object, ..., nobs, dispersion, k)
            standardGeneric("qAICc"))
 
 setMethod("qAICc", signature(object="ANY"),
-function(object, ..., nobs, dispersion){
-  qAICc(object=logLik(object, ...), nobs=nobs, dispersion=dispersion)
+function(object, ..., nobs, dispersion, k){
+  qAICc(object=logLik(object, ...), nobs=nobs, dispersion=dispersion, k=k)
 })
 
 setMethod("qAICc", "mle2",
-          function (object, ..., nobs, dispersion)  {
+          function (object, ..., nobs, dispersion, k)  {
             L <- list(...)
             if (length(L)) {
               L <- c(list(object),L)
@@ -791,7 +808,7 @@ setMethod("qAICc", "mle2",
           })
 
 setMethod("qAICc", signature(object="logLik"),
-          function(object, ..., nobs, dispersion){
+          function(object, ..., nobs, dispersion, k){
             if (missing(nobs)) {
               if (is.null(attr(object,"nobs")))
                 stop("number of observations not specified")
@@ -803,19 +820,19 @@ setMethod("qAICc", signature(object="logLik"),
               dispersion <- attr(object,"dispersion")
             }
             df <- attr(object,"df")
-            -2 * c(object)/dispersion + 2*df+2*df*(df+1)/(nobs-df-1)
+            -2 * c(object)/dispersion + k*df+2*df*(df+1)/(nobs-df-1)
           })
 
-setGeneric("qAIC", function(object, ..., dispersion)
+setGeneric("qAIC", function(object, ..., dispersion, k)
            standardGeneric("qAIC"))
 
 setMethod("qAIC", signature(object="ANY"),
-function(object, ..., nobs, dispersion){
-  qAIC(object=logLik(object, ...), nobs=nobs, dispersion=dispersion)
+function(object, ..., dispersion, k){
+  qAIC(object=logLik(object, ...), dispersion=dispersion, k=k)
 })
 
 setMethod("qAIC", signature(object="logLik"),
-          function(object, ..., nobs, dispersion){
+          function(object, ..., dispersion, k){
             if (missing(nobs)) {
               if (is.null(attr(object,"nobs")))
                 stop("number of observations not specified")
@@ -827,21 +844,21 @@ setMethod("qAIC", signature(object="logLik"),
               dispersion <- attr(object,"dispersion")
             }
             df <- attr(object,"df")
-            -2 * c(object)/dispersion + 2*df
+            -2 * c(object)/dispersion + k*df
           })
 
 setMethod("qAIC", "mle2",
-          function (object, ..., k = 2, dispersion) {
+          function (object, ..., dispersion, k=2) {
             L <- list(...)
             if (length(L)) {
               L <- c(list(object),L)
               if (!all(sapply(L,class)=="mle2"))
                 stop("all objects in list must be class mle2")
               logLiks <- lapply(L, logLik)
-              AICs <- sapply(logLiks,qAIC,k=k, dispersion=dispersion)
+              AICs <- sapply(logLiks,qAIC, k=k, dispersion=dispersion)
               df <- sapply(L,attr,"df")
               data.frame(AIC=AICs,df=df)
-            } else qAIC(logLik(object), k = k, dispersion=dispersion)
+            } else qAIC(logLik(object), k=k, dispersion=dispersion)
           })
 
 ## copied from stats4
