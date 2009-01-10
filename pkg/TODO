@@ -1,5 +1,8 @@
 BUGS/ISSUES:
 
+  issues when hitting new minimum in confint rather than
+profile; should return unevaluated call too in this case
+
   use numDeriv library hessian() function instead of nlme::fdHess?
 (use nlme::fdHess to avoid loading whole package?)
 

@@ -3,24 +3,33 @@
 \alias{spois}
 \alias{snbinom}
 \alias{sbeta}
+\alias{sbetabinom}
 \title{Abstract definitions of distributions}
 \description{
   Functions returning values for summary statistics
   (mean, median, etc.) of distributions
 }
 \usage{
-sbinom(size,prob)
+sbinom(size, prob)
 snbinom(size, prob, mu)
 spois(lambda)
-sbeta(shape1,shape2)
+sbeta(shape1, shape2)
+sbetabinom(size, prob, theta)
 }
 \arguments{
-  \item{prob}{probability as defined for \code{dbinom} or \code{dnbinom}}
-  \item{size}{size/variance parameter as defined for \code{dnbinom}}
-  \item{mu}{mean parameter as defined for \code{dnbinom}}
- \item{shape1}{shape parameter for \code{dbeta}}
- \item{shape2}{shape parameter for \code{dbeta}}
-  \item{lambda}{rate parameter as defined for \code{dpois}}
+  \item{prob}{probability as defined for \code{\link{dbinom}},
+    \code{\link{dnbinom}}, or beta-binomial distribution
+    (\code{dbetabinom} in the \code{emdbook} package)}
+  \item{size}{size parameter as defined for
+    \code{\link{dbinom}} or \code{dbetabinom}
+    in the \code{emdbook} package, or size/overdispersion parameter
+    as in \code{\link{dnbinom}}}
+  \item{mu}{mean parameter as defined for \code{\link{dnbinom}}}
+  \item{shape1}{shape parameter for \code{\link{dbeta}}}
+  \item{shape2}{shape parameter for \code{\link{dbeta}}}
+  \item{lambda}{rate parameter as defined for \code{\link{dpois}}}
+  \item{theta}{overdispersion parameter for beta-binomial
+    (see \code{dbetabinom} in the \code{emdbook} package)}
 }
 \value{
   \item{title}{name of the distribution}

@@ -1,5 +1,6 @@
 devel:
   fix AICctab bug
+  remove spurious cat/print in profile
 
 0.9.0 26/08/2008
 *  fix Tom Hobbs bug: named lower/upper/parscale/ndeps
