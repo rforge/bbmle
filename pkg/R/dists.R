@@ -48,3 +48,13 @@ spois <- function(lambda) {
        variance=lambda,
        sd=sqrt(lambda))      
 }
+
+sbetabinom <- function(size,prob,theta) {
+  list(title="Beta-binomial",
+       prob=prob,size=size,theta=theta,
+       mean=prob*size,
+       median=NA, ## qbetabinom(0.5,size,prob),
+       mode=NA,
+       variance=size*prob*(1-prob)/theta,
+       sd=sqrt(size*prob*(1-prob)))
+}
