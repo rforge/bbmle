@@ -1,4 +1,4 @@
-\name{mle}
+\name{mle2}
 \alias{mle2}
 \alias{mle}
 \alias{calc_mle2_function}
