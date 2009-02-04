@@ -174,6 +174,8 @@ mle2 <- function(minuslogl,
   call <- match.call()
   call.orig <- call
   ## bug fix??
+  ## this is a hack! would like to do a better job
+  ## consider: call <- rapply(call,eval.parent)
   call$data <- eval.parent(call$data)
   call$upper <- eval.parent(call$upper)
   call$lower <- eval.parent(call$lower)
