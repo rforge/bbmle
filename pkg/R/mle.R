@@ -181,6 +181,7 @@ mle2 <- function(minuslogl,
   call$lower <- eval.parent(call$lower)
   call$control$parscale <- eval.parent(call$control$parscale)
   call$control$ndeps <- eval.parent(call$control$ndeps)
+  call$control$maxit <- eval.parent(call$control$maxit)
   ##   browser()
   if(!missing(start))
     if (!is.list(start)) {
