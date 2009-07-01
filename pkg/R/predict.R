@@ -62,8 +62,9 @@ gfun <- function(object,newdata=NULL,location=c("mean","median"),
   ## HACK: need a way to figure out how many data points there
   ##  are, in the *absence* of an explicit data argument
   if (op=="simulate") {
-    if (is.null(m1@data)) stop("need explicit data argument for simulation")
-    ndata <- max(sapply(m1@data,length)) ## ???
+    if (length(object@data)==0)
+      stop("need explicit data argument for simulation")
+    ndata <- max(sapply(object@data,length)) ## ???
     arglist1 <- c(arglist1,list(n=ndata*nsim))
   }
   vals <- with(as.list(coef(object)),do.call(sdist,arglist1))

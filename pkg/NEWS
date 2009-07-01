@@ -1,4 +1,4 @@
-devel:
+0.9.1 (devel):
   fix AICctab bug
   remove spurious cat/print in profile
 
