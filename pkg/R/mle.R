@@ -57,6 +57,8 @@ calc_mle2_function <- function(formula,parameters,
   ## need to check on variable order:
   ## should it go according to function/formula,
   ##   not start?
+  vecstart <- (is.numeric(start))
+  if (vecstart) start <- as.list(start) ## ??
   parnames <- as.list(names(start))
   names(parnames) <- names(start)
   ## hack
@@ -127,6 +129,7 @@ calc_mle2_function <- function(formula,parameters,
   flist <-  vector("list",npars)
   names(flist) <- parnames
   formals(fn) <- flist
+  if (vecstart) start <- unlist(start)
   list(fn=fn,start=start,parameters=parameters,
        fdata=list(vars=vars,mmats=mmats,vpos=vpos,
          arglist1=arglist1,ddistn=ddistn,parameters=parameters),
@@ -1103,32 +1106,24 @@ function (object, parm, level = 0.95, trace=FALSE, ...)
   Pnames <- names(object@profile)
   if (missing(parm)) parm <- Pnames
   if (is.character(parm)) parm <- match(parm,Pnames)
-  if (any(is.na(parm))) stop("parameters not found in model coefficients")
+  if (any(is.na(parm))) stop("parameters not found in profile")
   ## Calculate confidence intervals based on likelihood
   ## profiles
-  of <- object@summary
-  pnames <- rownames(of@coef)
-  if (missing(parm))
-    parm <- seq(along=pnames)
-  if (is.character(parm))
-        parm <- match(parm, pnames, nomatch = 0)
-    a <- (1 - level)/2
-    a <- c(a, 1 - a)
-    pct <- paste(round(100 * a, 1), "%")
-    ci <- array(NA, dim = c(length(parm), 2),
-                dimnames = list(pnames[parm], pct))
-    cutoff <- qnorm(a)
-    std.err <- object@summary@coef[, "Std. Error"]
-    call <- object@summary@call
-    B0 <- object@summary@coef[,"Estimate"]
-    for (pm in parm) {
-      pro <- object@profile[[pnames[pm]]]
-      sp <- if (length(pnames) > 1)
-        spline(x = pro[, "par.vals"][, pm], y = pro[, 1])
-      else spline(x = pro[, "par.vals"], y = pro[, 1])
-      ci[pnames[pm], ] <- approx(sp$y, sp$x, xout = cutoff)$y
-    }
-    drop(ci)
+  a <- (1 - level)/2
+  a <- c(a, 1 - a)
+  pct <- paste(round(100 * a, 1), "%")
+  ci <- array(NA, dim = c(length(parm), 2),
+              dimnames = list(Pnames[parm], pct))
+  cutoff <- qnorm(a)
+  for (pm in parm) {
+    pro <- object@profile[[Pnames[pm]]]
+    pv <- pro[,"par.vals"]
+    sp <- if (is.matrix(pv)) {
+      spline(x = pv[, Pnames[pm]], y = pro[, 1])
+    } else spline(x = pv, y = pro[, 1])
+    ci[Pnames[pm], ] <- approx(sp$y, sp$x, xout = cutoff)$y
+  }
+  drop(ci)
 })
 
 setMethod("confint", "mle2",

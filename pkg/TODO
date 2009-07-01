@@ -1,10 +1,16 @@
 BUGS/ISSUES:
 
+spurious warnings in 1-parameter conf int:
+
+library(bbmle)
+m1 <- mle2(10~dbinom(prob=p,size=15),start=list(p=0.67))
+c1 <- confint(m1)
+
   issues when hitting new minimum in confint rather than
 profile; should return unevaluated call too in this case
 
   use numDeriv library hessian() function instead of nlme::fdHess?
-(use nlme::fdHess to avoid loading whole package?)
+(or use nlme::fdHess to avoid loading whole package?)
 
   turn off Hessian calculation for profile fits??
 
