@@ -1,6 +1,8 @@
 0.9.1 (devel):
+  added simulate method (formula interface only)
   fix AICctab bug
   remove spurious cat/print in profile
+  fix qAIC bug
 
 0.9.0 26/08/2008
 *  fix Tom Hobbs bug: named lower/upper/parscale/ndeps

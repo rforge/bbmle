@@ -66,7 +66,6 @@ calc_mle2_function <- function(formula,parameters,
     vars <- as.character(sapply(parameters,"[[",2))
     if (length(parameters)>1) {
       models <-  sapply(parameters,function(z) call.to.char(z[[3]]))
-       ## as.character(sapply(parameters,"[[",3))
     } else {
       models <- as.character(parameters)
     }
@@ -829,21 +828,16 @@ setMethod("qAICc", signature(object="logLik"),
             -2 * c(object)/dispersion + k*df+2*df*(df+1)/(nobs-df-1)
           })
 
-setGeneric("qAIC", function(object, ..., dispersion, k)
+setGeneric("qAIC", function(object, ..., dispersion, k=2)
            standardGeneric("qAIC"))
 
 setMethod("qAIC", signature(object="ANY"),
-function(object, ..., dispersion, k){
-  qAIC(object=logLik(object, ...), dispersion=dispersion, k=k)
+function(object, ..., dispersion, k=2){
+  qAIC(object=logLik(object, ...), dispersion=dispersion, k)
 })
 
 setMethod("qAIC", signature(object="logLik"),
           function(object, ..., dispersion, k){
-            if (missing(nobs)) {
-              if (is.null(attr(object,"nobs")))
-                stop("number of observations not specified")
-              nobs <- attr(object,"nobs")
-            }
             if (missing(dispersion)) {
               if (is.null(attr(object,"dispersion")))
                 stop("dispersion not specified")
@@ -864,7 +858,9 @@ setMethod("qAIC", "mle2",
               AICs <- sapply(logLiks,qAIC, k=k, dispersion=dispersion)
               df <- sapply(L,attr,"df")
               data.frame(AIC=AICs,df=df)
-            } else qAIC(logLik(object), k=k, dispersion=dispersion)
+            } else {
+              qAIC(logLik(object), k=k, dispersion=dispersion)
+            }
           })
 
 ## copied from stats4
