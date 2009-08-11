@@ -631,8 +631,8 @@ setMethod("profile", "mle2",
 
 
 ICtab <- function(...,type=c("AIC","BIC","AICc","qAIC","qAICc"),
-                  weights=FALSE,delta=FALSE,
-                  sort=FALSE,nobs,dispersion=1,mnames,k=2) {
+                  weights=FALSE,delta=TRUE,base=FALSE,
+                  sort=TRUE,nobs,dispersion=1,mnames,k=2) {
   L <- list(...)
   if (is.list(L[[1]]) && length(L)==1) L <- L[[1]]
   type <- match.arg(type)
@@ -665,18 +665,24 @@ ICtab <- function(...,type=c("AIC","BIC","AICc","qAIC","qAICc"),
     if (!is.null(df <- attr(x,"df"))) return(df)
     else if (!is.null(df <- attr(logLik(x),"df"))) return(df)
   }
-  df <- sapply(L,getdf)
-  tab <- data.frame(IC=ICs,df=df)
-  names(tab)[1] <- type
   dIC <- ICs-min(ICs)
-  if (delta) {
-    tab <- data.frame(tab,"dIC"=dIC)
+  df <- sapply(L,getdf)
+  if (base) {
+    tab <- data.frame(IC=ICs,df=df)
+    names(tab)[1] <- type
+  } else if (delta) {
+    tab <- data.frame(dIC=dIC,df=df)
+    names(tab)[1] <- paste("d",type,sep="")
+  }
+  if (delta && base) {
+    tab <- data.frame(tab,dIC=dIC)
     names(tab)[3] <- paste("d",type,sep="")
   }
+  if (!delta && !base) stop("either 'base' or 'delta' must be TRUE")
   if (weights) {
-      wts <- exp(-dIC/2)/sum(exp(-dIC/2))
-      tab <- data.frame(tab,weight=wts)
-    }
+    wts <- exp(-dIC/2)/sum(exp(-dIC/2))
+    tab <- data.frame(tab,weight=wts)
+  }
   if (missing(mnames)) {
     Call <- match.call()
     if (!is.null(names(Call))) {

@@ -36,6 +36,19 @@ gfun <- function(object,newdata=NULL,location=c("mean","median"),
     stop("function ",sdist," does not exist")
   ## evaluate parameters
   ## evaluate sdist [ newdata > coef > data ]
+##   if (is.null(object@data)) {
+##     comb <- newdata
+##   } else {
+##     nmatch <- match(names(newdata),names(object@data))
+##     comb <- object@data
+##     comb[na.omit(nmatch)] <- newdata[!is.na(nmatch)]
+##     comb <- c(comb,newdata[is.na(nmatch)])
+##   }
+##   comb <- c(newdata,object@data)
+##   comb <- comb[!duplicated(names(comb))]
+##   comb <- comb[sapply(comb,length)>0]
+##   rvar <- strsplit(object@formula,"~")[[1]][1]
+##   comb <- comb[!names(comb)==rvar] ## remove response variable
   parameters <- eval(object@call$parameters)
   if (!is.null(parameters)) {
     vars <- as.character(sapply(parameters,"[[",2))
@@ -51,13 +64,16 @@ gfun <- function(object,newdata=NULL,location=c("mean","median"),
         vname <- vars[i]
         p <- parameters[[i]]
         p[[2]] <- NULL
-        mmat <- model.matrix(p,data=c(newdata,object@data))
+        mmat <- with(c(newdata,object@data),
+                     model.matrix(p,data=environment()))
+        ## c(as.list(newdata),as.list(object@data)))
         pnames <- paste(vname,colnames(mmat),sep=".")
         assign(vname,mmat %*% coef(object)[pnames])
       }
     }
   }
-  arglist1 <- lapply(arglist,eval,envir=c(newdata,object@data,as.list(coef(object))),
+  arglist1 <- lapply(arglist,eval,envir=c(newdata,object@data,
+                                    as.list(coef(object))),
                      enclos=sys.frame(sys.nframe()))
   ## HACK: need a way to figure out how many data points there
   ##  are, in the *absence* of an explicit data argument

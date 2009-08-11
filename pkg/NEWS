@@ -1,4 +1,9 @@
-0.9.1 (devel):
+0.9.2 10/08/2009
+* fixed predict() for case with parameters
+* added snorm
+* changed ICtab defaults to weight=TRUE, base=FALSE, sort=TRUE
+
+0.9.1 
   added simulate method (formula interface only)
   fix AICctab bug
   remove spurious cat/print in profile
