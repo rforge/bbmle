@@ -50,8 +50,12 @@ setClass("slice.mle2", representation(profile="list",
 
 setIs("profile.mle2", "slice.mle2")
 
-calc_mle2_function <- function(formula,parameters,
-                              start,data=NULL,trace=FALSE) {
+calc_mle2_function <- function(formula,
+                               parameters,
+                               start,
+                               parnames,
+                               data=NULL,
+                               trace=FALSE) {
   RHS <- formula[[3]]
   ddistn <- as.character(RHS[[1]])
   ## need to check on variable order:
@@ -59,8 +63,10 @@ calc_mle2_function <- function(formula,parameters,
   ##   not start?
   vecstart <- (is.numeric(start))
   if (vecstart) start <- as.list(start) ## ??
-  parnames <- as.list(names(start))
-  names(parnames) <- names(start)
+  if (missing(parnames) || is.null(parnames)) {
+    parnames <- as.list(names(start))
+    names(parnames) <- names(start)
+  }
   ## hack
   if (!missing(parameters)) {
     vars <- as.character(sapply(parameters,"[[",2))
@@ -76,6 +82,8 @@ calc_mle2_function <- function(formula,parameters,
     } else {
       mmats <- list()
       vpos <- list()
+      pnames0 <- parnames
+      names(parnames) <- parnames
       for (i in seq(along=parameters)) {
         vname <- vars[i]
         p <- parameters[[i]]
@@ -83,7 +91,7 @@ calc_mle2_function <- function(formula,parameters,
         mmat <- model.matrix(p,data=data)     
         pnames <- paste(vname,colnames(mmat),sep=".")
         parnames[[vname]] <- pnames ## insert into parameter names
-        vpos0 <- which(names(start)==vname)
+        vpos0 <- which(pnames0==vname)
         vposvals <- cumsum(sapply(parnames,length))
         ## fill out start vectors with zeros or replicates as appropriate
         if (length(start[[vname]])==1) {
@@ -148,6 +156,7 @@ mle2 <- function(minuslogl,
                  eval.only = FALSE,
                  vecpar = FALSE,
                  parameters=NULL,
+                 parnames=NULL,
                  skip.hessian=FALSE,
                  trace=FALSE,
                  gr,
@@ -156,15 +165,23 @@ mle2 <- function(minuslogl,
   if (missing(optimizer)) optimizer <- mle2.options("optimizer")
   ## if (optimizer != "optim") stop("only optim() is currently supported")
   if (inherits(minuslogl,"formula")) {
-    pf <- function(f) {if (is.null(f)) "" else paste(f[2],"~",
-                                                     gsub(" ","",as.character(f[3])),sep="")}
+    pf <- function(f) {if (is.null(f))
+                         {  ""
+                          } else {
+                            paste(f[2],"~",
+                                  gsub(" ","",as.character(f[3])),sep="")
+                          }
+                     }
     if (missing(parameters)) {
       formula <- pf(minuslogl)
     } else {
-      formula <- paste(pf(minuslogl),paste(sapply(parameters,pf),collapse=", "),sep=": ")
+      formula <- paste(pf(minuslogl),
+                       paste(sapply(parameters,pf),collapse=", "),sep=": ")
     }
     tmp <- calc_mle2_function(minuslogl,parameters,
-                              start,data,trace)
+                              start,
+                              parnames,
+                              data,trace)
     minuslogl <- tmp$fn
     start <- tmp$start
     fdata <- tmp$fdata
@@ -1238,6 +1255,12 @@ function (object, ...)
     class(val) <- "logLik"
     val
   })
+
+setMethod("deviance", "mle2",
+function (object, ...)
+{
+  -2*logLik(object)
+})
 
 setMethod("vcov", "mle2", function (object, ...) { object@vcov } )
 

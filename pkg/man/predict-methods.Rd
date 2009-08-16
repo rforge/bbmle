@@ -3,6 +3,7 @@
 \alias{gfun}
 \alias{predict-methods}
 \alias{predict,mle2-method}
+\alias{residuals,mle2-method}
 \alias{simulate,mle2-method}
 \title{Predicted values from an mle2 fit}
 \description{
@@ -16,17 +17,20 @@
 }}
 \usage{
     \S4method{predict}{mle2}(object, newdata=NULL,
-                         location=c("mean","median"), \dots)
+                         location="mean", newparams=NULL, \dots)
     \S4method{simulate}{mle2}(object, nsim,
-                         seed, \dots)
-
+                         seed, newdata=NULL, newparams=NULL, \dots)
+    \S4method{residuals}{mle2}(object,type=c("pearson","response"),
+                   location="mean",\dots)
 }
 \arguments{
   \item{object}{an mle2 object}
   \item{newdata}{optional list of new data}
+  \item{newparams}{optional vector of new parameters}
   \item{location}{name of the summary statistic to return}
   \item{nsim}{number of simulations}
   \item{seed}{random number seed}
+  \item{type}{residuals type}
   \item{\dots}{additional arguments (for generic compatibility)}
 }
 \examples{

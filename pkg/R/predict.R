@@ -1,9 +1,13 @@
 
 setMethod("simulate", "mle2",
-          function(object, nsim, seed, ...) {
+          function(object, nsim, seed, newdata=NULL,
+                   newparams=NULL, ...) {
             if (missing(nsim)) nsim=1
-            if (!missing(seed)) set.seed(seed)
-            g <- gfun(object,nsim=nsim,op="simulate")
+            if (!missing(seed) && !is.null(seed)) set.seed(seed)
+            if (!is.null(newparams)) {
+              object@fullcoef <- newparams
+            }
+            g <- gfun(object,newdata=newdata, nsim=nsim,op="simulate")
             if (nsim>1) {
               g <- matrix(g,ncol=nsim)
             }
@@ -12,14 +16,34 @@ setMethod("simulate", "mle2",
 
 setMethod("predict", "mle2",
           function(object,newdata=NULL,
-                   location=c("mean","median"), ...) {
+                   location="mean",newparams=NULL, ...) {
+            if (!is.null(newparams)) {
+              object@fullcoef <- newparams
+            }
             gfun(object,newdata=newdata,location=location,op="predict")
+          })
+
+setMethod("residuals", "mle2",
+          function(object,
+                   type=c("pearson","response"),
+                   location="mean",
+                   ...) {
+            type <- match.arg(type)
+            location <- match.arg(location)
+            pred <- predict(object,location)
+            ## not sure this will work ...
+            obs <- with(object@data,
+                        get(gsub("~.+","",object@formula)))
+            res <- obs-pred
+            if (type=="response") return(res)
+            vars <- predict(object,location="variance")
+            return(res/sqrt(vars))
           })
 
 ## general-purpose function for simulation and
 ##  prediction (the hard part is evaluating the parameters etc.)
 ##
-gfun <- function(object,newdata=NULL,location=c("mean","median"),
+gfun <- function(object,newdata=NULL,location=c("mean","median","variance"),
                  nsim,
                  op=c("predict","simulate")) {
   ## notes: should operate on formula
@@ -80,7 +104,7 @@ gfun <- function(object,newdata=NULL,location=c("mean","median"),
   if (op=="simulate") {
     if (length(object@data)==0)
       stop("need explicit data argument for simulation")
-    ndata <- max(sapply(object@data,length)) ## ???
+    ndata <- max(sapply(c(newdata,object@data),length)) ## ???
     arglist1 <- c(arglist1,list(n=ndata*nsim))
   }
   vals <- with(as.list(coef(object)),do.call(sdist,arglist1))
