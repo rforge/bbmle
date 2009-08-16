@@ -1,0 +1,43 @@
+\documentclass{article}
+%\VignettePackage{mle2}
+%\VignetteIndexEntry{mle2: extended classes and methods for general-purpose maximum likelihood estimation}
+
+\usepackage[utf8]{inputenc} % for UTF-8/single quotes from sQuote()
+\usepackage{graphicx}
+\usepackage{array}
+\usepackage{color}
+\usepackage[colorlinks=true,urlcolor=blue,bookmarks=true]{hyperref}
+
+\newcommand{\code}[1]{{\tt #1}}
+\title{The \code{mle2} package}
+\author{Ben Bolker}
+\date{\today}
+
+\begin{document}
+\maketitle
+\tableofcontents
+
+
+\section{Introduction}
+
+There's not much here yet \ldots but hopefully I will
+be adding to this in the future.
+
+\textbf{To do:}
+\begin{itemize}
+  \item{use \code{predict}, \code{simulate} etc.
+    to demonstrate different parametric bootstrap approaches
+    to confidence and prediction intervals
+    \begin{itemize}
+      \item use \code{predict} to get means and standard
+        deviations, use delta method?
+      \item use \code{vcov}, assuming quadratic profiles,
+        with \code{predict(\ldots,newparams=\ldots)}
+      \item prediction intervals assuming no parameter uncertainty
+        with \code{simulate}
+      \item both together \ldots
+      \end{itemize}
+    }
+  \end{itemize}
+    
+\end{document}
