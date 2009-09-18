@@ -24,6 +24,7 @@
       saved in its original form (i.e. without data arguments
       evaluated).}
     \item{\code{coef}:}{(numeric) Vector of estimated parameters.}
+    \item{\code{data}:}{(data frame or list) Data with which to evaluate the negative log-likelihood function}
     \item{\code{fullcoef}:}{(numeric) Fixed and estimated parameters.}
     \item{\code{vcov}:}{(numeric matrix) Approximate variance-covariance
       matrix, based on the second derivative matrix at the MLE.}
