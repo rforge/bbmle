@@ -236,9 +236,14 @@ mle2 <- function(minuslogl,
   nstart <- names(unlist(sapply(namedrop(start),eval.parent)))
   fullcoef[! nfull %in% nfix & ! nfull %in% nstart ] <- NULL  ## delete unnecessary names
   nfull <- names(fullcoef)
-  if (length(call$upper)>sum(!nfull %in% nfix) ||
-      length(call$lower)>sum(!nfull %in% nfix))
-    warning("length mismatch between lower/upper and number of non-fixed parameters")
+  lc <- length(call$lower)
+  lu <- length(call$upper)
+  npnfix <- sum(!nfull %in% nfix)
+  if (!npnfix==0 && (lu>npnfix || lc>npnfix )) {
+    warning("length mismatch between lower/upper ",
+            "and number of non-fixed parameters: ",
+            "# lower=",lc,", # upper=",lu,", # non-fixed=",npnfix)
+  }
   template <- lapply(start, eval.parent)  ## preserve list structure!
   if (vecpar) template <- unlist(template)
   start <- sapply(namedrop(start), eval.parent) # expressions are allowed; added namedrop
@@ -515,7 +520,7 @@ setMethod("profile", "mle2",
                     ri[, p.i] <- bi
                     ##cat(2*pfit@min,2*fitted@min,zz,
                     ##   tol.newmin,zz<(-tol.newmin),"\n")
-                    if (zz<0) {
+                    if (!is.na(zz) && zz<0) {
                         if (zz > (-tol.newmin)) {
                             zz <- 0
                         } else {
@@ -598,10 +603,12 @@ setMethod("profile", "mle2",
                 ## (We now have.)
                 call$start <- as.list(B0)
                 lastz <- 0
-                lbound <- if (!is.null(lower) && length(lower)>1)
-                  lower[i] else -Inf
-                ubound <- if (!is.null(upper) && length(upper)>1)
-                  upper[i] else Inf
+                valf <- function(b) {
+                  (!is.null(b) && length(b)>1) ||
+                  (length(b)==1 && i==1 && is.finite(b))
+                }
+                lbound <- if (valf(lower)) lower[i] else -Inf
+                ubound <- if (valf(upper)) upper[i] else Inf
                 while ((step <- step + 1) < maxsteps && abs(z) < zmax) {
                   curval <- B0[i] + sgn * step * del * std.err[i]
                   if ((sgn==-1 & curval<lbound) ||

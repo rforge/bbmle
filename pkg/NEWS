@@ -1,5 +1,8 @@
 0.9.3 (version bump from previous) 18/09/2009
 
+* tweaked handling of bounds: profile now succeeds
+  on some 1D problems where it didn't before
+
 15/08/2009
 
 * added deviance, residuals methods
