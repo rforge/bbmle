@@ -664,7 +664,7 @@ ICtab <- function(...,type=c("AIC","BIC","AICc","qAIC","qAICc"),
     if (type=="BIC") stop("cannot specify dispersion with BIC")
     if (substr(type,1,1)!="q") {
       type = paste("q",type,sep="")
-      warning("dispersion!=1, type changed to",type)
+      warning("dispersion!=1, type changed to ",type)
     }
   }
   if (type=="AICc" || type=="BIC" || type=="qAICc") {
@@ -812,12 +812,12 @@ setMethod("AIC", "mle2",
 
 ### quasi- methods
 
-setGeneric("qAICc", function(object, ..., nobs, dispersion, k)
+setGeneric("qAICc", function(object, ..., nobs, dispersion, k=2)
            standardGeneric("qAICc"))
 
 setMethod("qAICc", signature(object="ANY"),
-function(object, ..., nobs, dispersion, k){
-  qAICc(object=logLik(object, ...), nobs=nobs, dispersion=dispersion, k=k)
+function(object, ..., nobs, dispersion, k=2){
+  qAICc(object=logLik(object), nobs=nobs, dispersion=dispersion, k=k)
 })
 
 setMethod("qAICc", "mle2",
@@ -833,7 +833,7 @@ setMethod("qAICc", "mle2",
               if (length(unique(nobs))>1)
                 stop("nobs different: must have identical data for all objects")
               logLiks <- sapply(L, logLik)/dispersion
-              df <- sapply(L,attr,"df")
+              df <- sapply(L,attr,"df")+1 ## add one for scale parameter
               val <- logLiks+k*df*(df+1)/(nobs-df-1)
               data.frame(AICc=val,df=df)
             } else {
@@ -854,7 +854,7 @@ setMethod("qAICc", signature(object="logLik"),
                 stop("dispersion not specified")
               dispersion <- attr(object,"dispersion")
             }
-            df <- attr(object,"df")
+            df <- attr(object,"df")+1 ## add one for scale parameter
             -2 * c(object)/dispersion + k*df+2*df*(df+1)/(nobs-df-1)
           })
 
@@ -863,7 +863,7 @@ setGeneric("qAIC", function(object, ..., dispersion, k=2)
 
 setMethod("qAIC", signature(object="ANY"),
 function(object, ..., dispersion, k=2){
-  qAIC(object=logLik(object, ...), dispersion=dispersion, k)
+  qAIC(object=logLik(object), dispersion=dispersion, k)
 })
 
 setMethod("qAIC", signature(object="logLik"),
