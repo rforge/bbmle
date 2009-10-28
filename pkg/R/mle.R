@@ -1169,6 +1169,7 @@ function (object, parm, level = 0.95, method,
     newpars_found <- FALSE
     prof = try(profile(object,which=parm,tol.newmin=tol.newmin))
     if (inherits(prof,"try-error")) stop(paste("Problem with profiling:",prof))
+    if (class(prof)=="mle2") newpars_found <- TRUE
     if (newpars_found) {
         ## profiling found a better fit
         cat("returning better fit\n")
