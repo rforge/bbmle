@@ -159,8 +159,11 @@ mle2 <- function(minuslogl,
                  parnames=NULL,
                  skip.hessian=FALSE,
                  trace=FALSE,
+                 transform=NULL, ## stub
                  gr,
                  ...) {
+  if (!missing(transform))
+    stop("parameter transformations not yet implemented")
   if (missing(method)) method <- mle2.options("optim.method")
   if (missing(optimizer)) optimizer <- mle2.options("optimizer")
   ## if (optimizer != "optim") stop("only optim() is currently supported")
@@ -353,13 +356,32 @@ mle2 <- function(minuslogl,
                          arglist$control <- NULL
                        do.call("optim",
                                c(list(par=start,
-                                      fn=objectivefunction, method=method,
+                                      fn=objectivefunction,
+                                      method=method,
                                       hessian=!skip.hessian,
                                       gr=objectivefunctiongr,
                                       control=call$control,
                                       lower=call$lower,
                                       upper=call$upper),
                                  arglist))
+                   },
+                   optimx = {
+                     ## don't ask, will get us into
+                     ##   dependency hell
+                     ## require("optimx")
+                     arglist <- list(...)
+                     arglist$lower <- arglist$upper <-
+                       arglist$control <- NULL
+                     do.call("optim",
+                             c(list(par=start,
+                                    fn=objectivefunction,
+                                    method=method,
+                                    hessian=!skip.hessian,
+                                    gr=objectivefunctiongr,
+                                    control=call$control,
+                                    lower=call$lower,
+                                    upper=call$upper),
+                               arglist))
                    },
                    nlm = nlm(f=objectivefunction, hessian=!skip.hessian, ...),
                    nlminb = nlminb(start=start,
@@ -776,7 +798,7 @@ setMethod("AICc", "mle2",
               data.frame(AICc=val,df=df)
             } else {
               df <- attr(object,"df")
-              c(-2*logLik(object)+2*df+2*df*(df+1)/(nobs-df-1))
+              c(-2*logLik(object)+k*df+k*df*(df+1)/(nobs-df-1))
             }
           })
 
@@ -984,7 +1006,7 @@ setMethod("anova","mle2",
 })
 
 setMethod("plot", signature(x="profile.mle2", y="missing"),
-function (x, levels, which=1:p, conf = c(99, 95, 90, 80, 50)/100, nseg = 50,
+function (x, levels, which=1:p, conf = c(99, 95, 90, 80, 50)/100,
           plot.confstr = TRUE, confstr = NULL, absVal = TRUE, add = FALSE,
           col.minval="green", lty.minval=2,
           col.conf="magenta", lty.conf=2,
@@ -996,8 +1018,6 @@ function (x, levels, which=1:p, conf = c(99, 95, 90, 80, 50)/100, nseg = 50,
           show.points=FALSE,
           main, xlim, ylim, ...)
 {
-    op <- par(no.readonly=TRUE)
-    on.exit(par(op))
     ## Plot profiled likelihood
     ## Based on profile.nls (package stats)
     obj <- x@profile
@@ -1007,17 +1027,19 @@ function (x, levels, which=1:p, conf = c(99, 95, 90, 80, 50)/100, nseg = 50,
     no.xlim <- missing(xlim)
     no.ylim <- missing(ylim)    
     if (is.character(which)) which <- match(which,nm)
-    par(ask=ask)
+    ask_orig <- par(ask=ask)
+    op <- list(ask=ask_orig)
     if (onepage) {
         nplots <- length(which)
         ## Q: should we reset par(mfrow), or par(mfg), anyway?
         if (prod(par("mfcol")) < nplots) {
             rows <- ceiling(round(sqrt(nplots)))
             columns <- ceiling(nplots/rows)
-            par(mfrow=c(rows,columns))
-            on.exit(par(op))
-        }
-    }
+            mfrow_orig <- par(mfrow=c(rows,columns))
+            op <- c(op,mfrow=mfrow_orig)
+          }
+      }
+    on.exit(par(op))
     confstr <- NULL
     if (missing(levels)) {
         levels <- sqrt(qchisq(pmax(0, pmin(1, conf)), 1))
