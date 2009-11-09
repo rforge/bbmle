@@ -1036,7 +1036,7 @@ function (x, levels, which=1:p, conf = c(99, 95, 90, 80, 50)/100,
             rows <- ceiling(round(sqrt(nplots)))
             columns <- ceiling(nplots/rows)
             mfrow_orig <- par(mfrow=c(rows,columns))
-            op <- c(op,mfrow=mfrow_orig)
+            op <- c(op,mfrow_orig)
           }
       }
     on.exit(par(op))
