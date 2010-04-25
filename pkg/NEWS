@@ -1,3 +1,13 @@
+0.9.5 
+
+  too many changes!
+ * added NAMESPACE, various fixes to go with that
+ * beginnings of an RUnit testing framework
+ * tweaked vignette
+ * added prof.lower, prof.upper to profile()
+ * added "optimize" to list of allowed optimizers, some
+   bug fixes
+
 0.9.4.1
 
  * tweaked par() resetting in profile plots
