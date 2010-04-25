@@ -1,4 +1,5 @@
-require(methods)  ## for independence from stats4
+## require(methods,quietly=TRUE)  ## for independence from stats4
+require(numDeriv,quietly=TRUE) ## for hessian()
 ## require(nlme) ## for fdHess() ## argh.  BIC conflict.
 
 call.to.char <- function(x) {
@@ -7,6 +8,20 @@ call.to.char <- function(x) {
     if (length(x)>1) x <- x[c(2,1,3)]
     paste(sapply(x,as.character),collapse="")
 }
+
+## must go before setAs to avoid warnings
+setClass("mle2", representation(call = "language",
+                                call.orig = "language",
+                                coef = "numeric",
+                                fullcoef = "numeric",
+                                vcov = "matrix",
+                                min = "numeric",
+                                details = "list",
+                                minuslogl = "function",
+                                method = "character",
+                                data="list",
+                                formula="character",
+                                optimizer="character"))
 
 setAs("mle","mle2", function(from,to) {
   new("mle2",
@@ -24,18 +39,6 @@ setAs("mle","mle2", function(from,to) {
       optimizer="optim")
 })
                 
-setClass("mle2", representation(call = "language",
-                                call.orig = "language",
-                                coef = "numeric",
-                                fullcoef = "numeric",
-                                vcov = "matrix",
-                                min = "numeric",
-                                details = "list",
-                                minuslogl = "function",
-                                method = "character",
-                                data="list",
-                                formula="character",
-                                optimizer="character"))
 
 setClass("summary.mle2", representation(call = "language",
                                coef = "matrix",
@@ -358,7 +361,7 @@ mle2 <- function(minuslogl,
                                c(list(par=start,
                                       fn=objectivefunction,
                                       method=method,
-                                      hessian=!skip.hessian,
+                                      hessian=FALSE,
                                       gr=objectivefunctiongr,
                                       control=call$control,
                                       lower=call$lower,
@@ -376,38 +379,48 @@ mle2 <- function(minuslogl,
                              c(list(par=start,
                                     fn=objectivefunction,
                                     method=method,
-                                    hessian=!skip.hessian,
+                                    hessian=FALSE,
                                     gr=objectivefunctiongr,
                                     control=call$control,
                                     lower=call$lower,
                                     upper=call$upper),
                                arglist))
                    },
-                   nlm = nlm(f=objectivefunction, hessian=!skip.hessian, ...),
+                   nlm = nlm(f=objectivefunction, p=start, hessian=!skip.hessian, ...),
                    nlminb = nlminb(start=start,
                      objective=objectivefunction, hessian=NULL, ...),
                    constrOptim = constrOptim(theta=start,
                      f=objectivefunction, method=method, ...),
-                   stop("unknown optimizer (choices are 'optim', 'nlm', 'nlminb', and 'constrOptim')")
+                   optimize=,
+                   optimise= optimize(f=objectivefunction, ...),
+                   stop("unknown optimizer (choices are 'optim', 'nlm', 'nlminb', 'constrOptim', and 'optimi[sz]e')")
                  )
   }
   optimval <- switch(optimizer,
                      optim= , constrOptim=, none="value",
                      nlm="minimum",
-                     nlminb="objective")
-  if (optimizer=="nlm") oout$par <- oout$estimate
-  if (optimizer=="nlminb") {
+                     optimize=, optimise=, nlminb="objective")
+  if (optimizer=="nlm") {
+    oout$par <- oout$estimate
+    oout$convergence <- oout$code
+  }
+  if (optimizer %in% c("optimise","optimize")) {
+    oout$par <- oout$minimum
+    oout$convergence <- 0 ## can't detect non-convergence
+  }
+  if (optimizer %in% c("nlminb","optimise","optimize")) {
     names(oout$par) <- names(start)
   }
-  ## HACK: constrOptim doesn't handle optim() arguments very well
-  ## so use default hessian=FALSE and compute them later
-  ## n.b. this is not using parscale information
-  if (optimizer %in% c("nlminb","constrOptim") && !skip.hessian) {
-    if (!require(nlme,quietly=TRUE))
-      stop("need nlme package to compute Hessians for nlminb or constrOptim")
-    oout$hessian <- nlme::fdHess(oout$par,objectivefunction)$Hessian
-    oout$hessian[lower.tri(oout$hessian)] <- t(oout$hessian)[lower.tri(oout$hessian)]
-    ## print(oout$hessian)
+  tmpf <- objectivefunction
+  ## FIXME: worry about boundary violations?
+  psc <- call$control$parscale
+  if (is.null(psc)) {
+    oout$hessian <- try(hessian(objectivefunction,oout$par))
+  } else {
+    tmpf <- function(x) {
+      objectivefunction(x/psc)
+    }
+    oout$hessian <- hessian(tmpf,oout$par*psc)*outer(psc,psc)
   }
   ##  } else {
   ## oout <- optim(start, objectivefunction, method=method, hessian=!skip.hessian, ...)
@@ -419,24 +432,24 @@ mle2 <- function(minuslogl,
   coef <- oout$par
   nc <- names(coef)
   if (skip.hessian) {
-    vcov <- matrix(NA,length(coef),length(coef))
+    tvcov <- matrix(NA,length(coef),length(coef))
   } else {
     if (length(coef)) {
-      tmphess <- try(solve(oout$hessian))
+      tmphess <- try(solve(oout$hessian,silent=TRUE))
       if (class(tmphess)=="try-error") {
-        vcov <- matrix(NA,length(coef),length(coef))
+        tvcov <- matrix(NA,length(coef),length(coef))
         warning("couldn't invert Hessian")
-      } else vcov <- tmphess
+      } else tvcov <- tmphess
     } else {
-      vcov <- matrix(numeric(0),0,0)
+      tvcov <- matrix(numeric(0),0,0)
     }
   }
-  dimnames(vcov) <- list(nc,nc)
+  dimnames(tvcov) <- list(nc,nc)
   min <-  oout[[optimval]]
   ##  if (named)
   fullcoef[nstart[order(oo)]] <- coef
   ## else fullcoef <- coef
-  m = new("mle2", call=call, call.orig=call.orig, coef=coef, fullcoef=unlist(fullcoef), vcov=vcov,
+  m = new("mle2", call=call, call.orig=call.orig, coef=coef, fullcoef=unlist(fullcoef), vcov=tvcov,
       min=min, details=oout, minuslogl=minuslogl, method=method,
     optimizer=optimizer,
       data=as.list(data),formula=formula)
@@ -450,7 +463,9 @@ mle2 <- function(minuslogl,
 ## it have an additional argument --- is that possible?
 setMethod("coef", "mle2", function(object) object@fullcoef )
 ## fullcoef <- function(object) object@fullcoef  ## this should be a method
-setMethod("coef", "summary.mle2", function(object) object@coef )
+setMethod("coef", "summary.mle2", function(object) { object@coef })
+## hmmm.  Work on this. 'hessian' conflicts with numDeriv definition. Override?
+## setMethod("Hessian", sig="mle2", function(object) { object@details$hessian })
 
 setMethod("show", "mle2", function(object){
     cat("\nCall:\n")
@@ -491,7 +506,8 @@ setMethod("profile", "mle2",
           function (fitted, which = 1:p, maxsteps = 100,
                     alpha = 0.01, zmax = sqrt(qchisq(1 - alpha/2, p)),
                     del = zmax/5, trace = FALSE, skiperrs=TRUE,
-                    std.err, tol.newmin = 0.001, debug=FALSE, ...) {
+                    std.err, tol.newmin = 0.001, debug=FALSE,
+                    prof.lower, prof.upper, ...) {
               ## fitted: mle2 object
               ## which: which parameters to profile (numeric or char)
               ## maxsteps: steps to take looking for zmax
@@ -583,7 +599,8 @@ setMethod("profile", "mle2",
               std.err <- sqrt(1/diag(fitted@details$hessian))
               if (any(is.na(std.err))) {
                 stop("Hessian is ill-behaved or missing,",
-                     "can't find an initial estimate of std. error")
+                     "can't find an initial estimate of std. error",
+                     "(consider specifying std.err in profile call)")
               }
               warning("Non-positive-definite Hessian,",
                       "attempting initial std err estimate from diagonals")
@@ -629,8 +646,12 @@ setMethod("profile", "mle2",
                   (!is.null(b) && length(b)>1) ||
                   (length(b)==1 && i==1 && is.finite(b))
                 }
-                lbound <- if (valf(lower)) lower[i] else -Inf
-                ubound <- if (valf(upper)) upper[i] else Inf
+                lbound <- if (!missing(prof.lower)) {
+                  prof.lower[i]
+                } else if (valf(lower))
+                  { lower[i]
+                  } else -Inf
+                ubound <- if (!missing(prof.upper)) prof.upper[i] else if (valf(upper)) upper[i] else Inf
                 while ((step <- step + 1) < maxsteps && abs(z) < zmax) {
                   curval <- B0[i] + sgn * step * del * std.err[i]
                   if ((sgn==-1 & curval<lbound) ||
@@ -916,7 +937,7 @@ setMethod("qAIC", "mle2",
           })
 
 ## copied from stats4
-setGeneric("BIC", function(object, ...) standardGeneric("BIC"))
+## setGeneric("BIC", function(object, ...) standardGeneric("BIC"))
 
 setMethod("BIC", signature(object="logLik"),
           function(object, ...){
@@ -953,9 +974,9 @@ setMethod("BIC", "mle2",
             else BIC(logLik(object), nobs = nobs)
           })
 
+setGeneric("anova", function(object, ...) standardGeneric("anova"))
 setMethod("anova","mle2",
-          function(object,...,width=getOption("width"),
-                   exdent=10) {
+          function(object,...,width=getOption("width"), exdent=10) {
             mlist <- c(list(object),list(...))
             ## get names from previous call
             mnames <- sapply(sys.call(sys.parent())[-1],deparse)
@@ -1286,6 +1307,7 @@ function (object, ...)
     val
   })
 
+setGeneric("deviance", function(object, ...) standardGeneric("deviance"))
 setMethod("deviance", "mle2",
 function (object, ...)
 {
