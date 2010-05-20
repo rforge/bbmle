@@ -87,8 +87,8 @@ First, generate a single beta-binomially distributed
 set of points as a simple test.
 
 Load the \code{emdbook} package
-to get functions for the beta-binomial distribution (density and random-deviate 
-function --- these functions are also available
+to get functions for the beta-binomial distribution (random-deviate 
+function \code{rbetabinom} --- these functions are also available
 in Jim Lindsey's \code{rmutil} package).
 <<emdbook>>=
 library(emdbook)
@@ -210,9 +210,8 @@ In this case the answers from \code{uniroot}
 and \code{spline} (default) methods barely
 differ.
 
-\subsection{Using real data}
-Get data from \cite{Crowder1978},
-as incorporated in the \code{aod} package:
+\subsection{Real data (\emph{Orobanche}, \cite{Crowder1978})}
+Data as incorporated in the \code{aod} package:
 <<aod>>=
 library(aod)
 data(orob1)
@@ -244,6 +243,14 @@ latex(crowder.results,file="",table.env=FALSE,title="model")
     data=list(x=orob1)))
 @ 
 
+Or:
+<<echo=FALSE,eval=FALSE>>=
+## would prefer ~dilution-1, but problems with starting values ...
+(m1B <- mle2(y~dbetabinom(prob,size=n,theta),
+             param=list(prob~dilution),
+             start=list(prob=0.5,theta=1),
+    data=orob1))
+@ 
 The result warns us that the optimization has not
 converged; we also don't match
 Crowder's results for $\theta$ exactly.
