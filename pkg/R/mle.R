@@ -815,7 +815,7 @@ setMethod("AICc", "mle2",
                 stop("nobs different: must have identical data for all objects")
               logLiks <- sapply(L, logLik)
               df <- sapply(L,attr,"df")
-              val <- logLiks+k*df*(df+1)/(nobs-df-1)
+              val <- -2*logLiks+k*df*(df+1)/(nobs-df-1)
               data.frame(AICc=val,df=df)
             } else {
               df <- attr(object,"df")

@@ -2,7 +2,7 @@ BUGS/ISSUES:
 
 * allow ICtab etc. to recognize optim(), optimize() fits
   (ASSUMING that the function was a NLL)
-* add optimizer() as alternative optimizer
+* add optimizer() as alternative optimizer [DONE]
 * fix par mfrow resetting glitch on plotting profile
 * prettier profile plots (with lattice)?  xyplot for profiles?
 * make sure numeric deriv modifications are working
@@ -30,8 +30,10 @@ BUGS/ISSUES:
 
 * use numDeriv library hessian() function instead of nlme::fdHess?
 (or use nlme::fdHess to avoid loading whole package?)
+  [DONE]
 
 * turn off Hessian calculation for profile fits??
+  [maybe DONE by virtue of previous fix]
 
 * should print warning immediately if convergence fails
 
