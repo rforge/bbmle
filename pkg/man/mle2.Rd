@@ -13,7 +13,9 @@ mle2(minuslogl, start, method, optimizer,
 default.start=TRUE, eval.only = FALSE, vecpar=FALSE,
 parameters=NULL,
 parnames=NULL,
-skip.hessian=FALSE,trace=FALSE,
+skip.hessian=FALSE,
+hessian.opts=NULL,
+trace=FALSE,
 transform=NULL,
 gr,\dots)
 calc_mle2_function(formula,parameters,start,
@@ -23,7 +25,11 @@ calc_mle2_function(formula,parameters,start,
   \item{minuslogl}{Function to calculate negative log-likelihood.}
   \item{start}{Named list. Initial values for optimizer.}
   \item{method}{Optimization method to use. See \code{\link{optim}}.}
-  \item{optimizer}{Optimization function to use. (Stub.)}
+  \item{optimizer}{Optimization function to use. Currently available
+    choices are "optim" (the default), "nlm", "nlminb", "constrOptim",
+    "optimx", and "optimize". Options other than the default are rather
+    poorly tested.
+  }
   \item{fixed}{Named list.  Parameter values to keep fixed during
     optimization.}
   \item{data}{list of data to pass to minuslogl}
@@ -43,6 +49,8 @@ calc_mle2_function(formula,parameters,start,
   \item{transform}{(stub) list of link functions/parameter transformations
     ("log"=log/exp, "logit"=plogis/qlogis, etc.)}
   \item{skip.hessian}{Bypass Hessian calculation?}
+  \item{hessian.opts}{Options for Hessian calculation, passed through to
+    the \code{\link[numDeriv]{hessian}} function}
 }
 \details{
   The \code{\link{optim}} optimizer is used to find the minimum of the

@@ -412,10 +412,12 @@ mle2 <- function(minuslogl,
   if (optimizer %in% c("nlminb","optimise","optimize")) {
     names(oout$par) <- names(start)
   }
-  tmpf <- objectivefunction
   ## FIXME: worry about boundary violations?
   ## (if we're on the boundary then the Hessian may not be useful anyway)
   ##
+  if ((!is.null(call$upper) || !is.null(call$lower)) &&
+      any(oout$par==call$upper) || any(oout$par==call$lower))
+    warning("some parameters are on the boundary: variance-covariance calculations may be unreliable")
   if (length(oout$par)==0) skip.hessian <- TRUE
   namatrix <- matrix(NA,nrow=length(start),ncol=length(start))
   if (!skip.hessian) {
@@ -423,10 +425,11 @@ mle2 <- function(minuslogl,
     if (is.null(psc)) {
       oout$hessian <- try(hessian(objectivefunction,oout$par,method.args=hessian.opts))
     } else {
+      cat(oout$par,"\n")
       tmpf <- function(x) {
-        objectivefunction(x/psc)
+        objectivefunction(x*psc)
       }
-      oout$hessian <- try(hessian(tmpf,oout$par*psc,method.args=hessian.opts)*outer(psc,psc))
+      oout$hessian <- try(hessian(tmpf,oout$par/psc,method.args=hessian.opts))/outer(psc,psc)
     }
   }
   if (skip.hessian || inherits(oout$hessian,"try-error"))

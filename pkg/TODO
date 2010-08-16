@@ -1,5 +1,6 @@
 BUGS/ISSUES:
 
+* check problems with optimizer="optimize" in tests/parscale.R
 * allow ICtab etc. to recognize optim(), optimize() fits
   (ASSUMING that the function was a NLL)
 * add optimizer() as alternative optimizer [DONE]
