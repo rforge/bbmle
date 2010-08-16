@@ -161,6 +161,7 @@ mle2 <- function(minuslogl,
                  parameters=NULL,
                  parnames=NULL,
                  skip.hessian=FALSE,
+                 hessian.opts=NULL,
                  trace=FALSE,
                  transform=NULL, ## stub
                  gr,
@@ -413,22 +414,23 @@ mle2 <- function(minuslogl,
   }
   tmpf <- objectivefunction
   ## FIXME: worry about boundary violations?
-  psc <- call$control$parscale
-  if (is.null(psc)) {
-    oout$hessian <- try(hessian(objectivefunction,oout$par))
-  } else {
-    tmpf <- function(x) {
-      objectivefunction(x/psc)
+  ## (if we're on the boundary then the Hessian may not be useful anyway)
+  ##
+  if (length(oout$par)==0) skip.hessian <- TRUE
+  namatrix <- matrix(NA,nrow=length(start),ncol=length(start))
+  if (!skip.hessian) {
+    psc <- call$control$parscale
+    if (is.null(psc)) {
+      oout$hessian <- try(hessian(objectivefunction,oout$par,method.args=hessian.opts))
+    } else {
+      tmpf <- function(x) {
+        objectivefunction(x/psc)
+      }
+      oout$hessian <- try(hessian(tmpf,oout$par*psc,method.args=hessian.opts)*outer(psc,psc))
     }
-    oout$hessian <- hessian(tmpf,oout$par*psc)*outer(psc,psc)
   }
-  ##  } else {
-  ## oout <- optim(start, objectivefunction, method=method, hessian=!skip.hessian, ...)
-  if (skip.hessian) {
-    oout$hessian = matrix(NA,nrow=length(start),ncol=length(start))
-  }
-  ## skip hessian calculation if 0 varying parameters
-  ##if (length(oout$par)) oout$hessian <- fdHess(pars=oout$par,fun=f)$Hessian
+  if (skip.hessian || inherits(oout$hessian,"try-error"))
+    oout$hessian <- namatrix
   coef <- oout$par
   nc <- names(coef)
   if (skip.hessian) {
