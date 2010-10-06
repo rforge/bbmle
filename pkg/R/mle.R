@@ -376,7 +376,7 @@ mle2 <- function(minuslogl,
                      arglist <- list(...)
                      arglist$lower <- arglist$upper <-
                        arglist$control <- NULL
-                     do.call("optim",
+                     do.call("optimx",
                              c(list(par=start,
                                     fn=objectivefunction,
                                     method=method,
@@ -398,9 +398,25 @@ mle2 <- function(minuslogl,
                  )
   }
   optimval <- switch(optimizer,
-                     optim= , constrOptim=, none="value",
+                     optim= , constrOptim=, optimx=, none="value",
                      nlm="minimum",
                      optimize=, optimise=, nlminb="objective")
+  if (optimizer=="optimx") {
+    ## HACK: oout from optimx is a data frame [therefore all elements must
+    ##  have the same length, in this class length 1].  Why??  I'm going
+    ## to try to pull out the details from the best fit ...
+    ## oout <- attr(oout,"details")[[which.min(oout$fvalues)]]
+    ## browser()
+    best <- which.min(oout$fvalues)
+    oout <- list(par=oout$par[[best]],
+                 value=oout$fvalues[[best]],
+                 convergence=oout$conv[[best]])
+  }
+  ## testing list replacement:
+  if (FALSE) {
+    z <- list(a=list(b=1:3))
+    z$a <- z$a[[1]]
+  }
   if (optimizer=="nlm") {
     oout$par <- oout$estimate
     oout$convergence <- oout$code
