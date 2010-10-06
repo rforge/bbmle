@@ -21,7 +21,7 @@ BUGS/ISSUES:
 
 * spurious error on mismatched parameter names
 
-* spurious warnings in 1-parameter conf int:
+* spurious warnings in 1-parameter conf int: [FIXED]
 
    library(bbmle)
    m1 <- mle2(10~dbinom(prob=p,size=15),start=list(p=0.67))
@@ -42,6 +42,7 @@ BUGS/ISSUES:
 treating profiled value as fixed ...
 
 * replace approx() in confint() with backspline?
+  general solution for non-monotonic profiles?
 
 BUG:   order of parameters matters for L-BFGS-B
   (fixed)

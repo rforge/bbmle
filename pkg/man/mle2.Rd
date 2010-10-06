@@ -16,8 +16,10 @@ parnames=NULL,
 skip.hessian=FALSE,
 hessian.opts=NULL,
 trace=FALSE,
+browse_obj=FALSE,
 transform=NULL,
-gr,\dots)
+gr,
+optimfun,\dots)
 calc_mle2_function(formula,parameters,start,
    parnames,data=NULL,trace=FALSE)
 }
@@ -46,11 +48,14 @@ calc_mle2_function(formula,parameters,start,
   \item{\dots}{Further arguments to pass to optimizer}
   \item{formula}{a formula for the likelihood (see Details)}
   \item{trace}{Logical: print parameter values tested?}
+  \item{browse_obj}{Logical: drop into browser() within the objective function?}
   \item{transform}{(stub) list of link functions/parameter transformations
     ("log"=log/exp, "logit"=plogis/qlogis, etc.)}
   \item{skip.hessian}{Bypass Hessian calculation?}
   \item{hessian.opts}{Options for Hessian calculation, passed through to
     the \code{\link[numDeriv]{hessian}} function}
+  \item{optimfun}{user-supplied optimization function. Must take exactly
+    the same arguments and return exactly the same structure as \code{\link{optim}}.}
 }
 \details{
   The \code{\link{optim}} optimizer is used to find the minimum of the

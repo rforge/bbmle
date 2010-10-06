@@ -127,8 +127,8 @@ calc_mle2_function <- function(formula,
         assign(vars[i],mmats[[i]] %*% pars[vpos[[i]]])
       }
     }
-    arglist1 <- lapply(arglist1,eval,envir=data,enclos=sys.frame(sys.nframe()))
-    r <- -sum(do.call(ddistn,arglist1))
+    arglist2 <- lapply(arglist1,eval,envir=data,enclos=sys.frame(sys.nframe()))
+    r <- -sum(do.call(ddistn,arglist2))
     ## doesn't work yet -- need to eval arglist in the right env ...
     ## if (debugfn) cat(unlist(arglist),r,"\n")
     ## browser()
@@ -163,14 +163,15 @@ mle2 <- function(minuslogl,
                  skip.hessian=FALSE,
                  hessian.opts=NULL,
                  trace=FALSE,
+                 browse_obj=FALSE,
                  transform=NULL, ## stub
                  gr,
+                 optimfun,
                  ...) {
   if (!missing(transform))
     stop("parameter transformations not yet implemented")
   if (missing(method)) method <- mle2.options("optim.method")
   if (missing(optimizer)) optimizer <- mle2.options("optimizer")
-  ## if (optimizer != "optim") stop("only optim() is currently supported")
   if (inherits(minuslogl,"formula")) {
     pf <- function(f) {if (is.null(f))
                          {  ""
@@ -309,6 +310,7 @@ mle2 <- function(minuslogl,
     ## doesn't help, environment(minuslogl) is empty by this time
     ## cat("e3:",length(ls(envir=environment(minuslogl))),"\n")
     ## hack to remove unwanted names ...
+    if (browse_obj) browser()
     do.call("minuslogl",namedrop(args))
   } ## end of objective function
   objectivefunctiongr <-
@@ -394,11 +396,26 @@ mle2 <- function(minuslogl,
                      f=objectivefunction, method=method, ...),
                    optimize=,
                    optimise= optimize(f=objectivefunction, ...),
-                   stop("unknown optimizer (choices are 'optim', 'nlm', 'nlminb', 'constrOptim', and 'optimi[sz]e')")
+                   user = {
+                     arglist <- list(...)
+                     arglist$lower <- arglist$upper <-
+                       arglist$control <- NULL
+                     do.call(optimfun,
+                             c(list(par=start,
+                                    fn=objectivefunction,
+                                    method=method,
+                                    hessian=FALSE,
+                                    gr=objectivefunctiongr,
+                                    control=call$control,
+                                    lower=call$lower,
+                                    upper=call$upper),
+                               arglist))
+                   },
+                   stop("unknown optimizer (choices are 'optim', 'nlm', 'nlminb', 'constrOptim', 'user', and 'optimi[sz]e')")
                  )
   }
   optimval <- switch(optimizer,
-                     optim= , constrOptim=, optimx=, none="value",
+                     optim= , constrOptim=, optimx=, user=, none="value",
                      nlm="minimum",
                      optimize=, optimise=, nlminb="objective")
   if (optimizer=="optimx") {
