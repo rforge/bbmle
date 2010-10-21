@@ -83,6 +83,7 @@ calc_mle2_function <- function(formula,
     if (npars==0) { ## no non-constant parameters
       parameters <- mmats <- vpos <- NULL
     } else {
+      ## BUG IN HERE SOMEWHERE, FIXME: SENSITIVE TO ORDER OF 'start'
       mmats <- list()
       vpos <- list()
       pnames0 <- parnames

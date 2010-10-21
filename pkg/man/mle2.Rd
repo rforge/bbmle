@@ -24,13 +24,14 @@ calc_mle2_function(formula,parameters,start,
    parnames,data=NULL,trace=FALSE)
 }
 \arguments{
-  \item{minuslogl}{Function to calculate negative log-likelihood.}
+  \item{minuslogl}{Function to calculate negative log-likelihood,
+  or a formula.}
   \item{start}{Named list. Initial values for optimizer.}
   \item{method}{Optimization method to use. See \code{\link{optim}}.}
   \item{optimizer}{Optimization function to use. Currently available
     choices are "optim" (the default), "nlm", "nlminb", "constrOptim",
-    "optimx", and "optimize". Options other than the default are rather
-    poorly tested.
+    "optimx", and "optimize". (\emph{Warning:} Options other than the default are rather
+    poorly tested.)
   }
   \item{fixed}{Named list.  Parameter values to keep fixed during
     optimization.}
@@ -42,7 +43,10 @@ calc_mle2_function(formula,parameters,start,
     rather than optimizing}
   \item{vecpar}{Logical: is first argument a vector of all parameters?
     (For compatibility with \code{\link{optim}}.)}
-  \item{parameters}{List of linear models for parameters}
+  \item{parameters}{List of linear models for parameters.
+    \emph{MUST BE SPECIFIED IN THE SAME ORDER as the start vector
+      (this is a bug/restriction that I hope to fix soon, but in
+      the meantime beware)}}
   \item{parnames}{List (or vector?) of parameter names}
   \item{gr}{gradient function}
   \item{\dots}{Further arguments to pass to optimizer}
