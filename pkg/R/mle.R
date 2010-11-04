@@ -99,7 +99,7 @@ calc_mle2_function <- function(formula,
         vposvals <- cumsum(sapply(parnames,length))
         ## fill out start vectors with zeros or replicates as appropriate
         if (length(start[[vname]])==1) {
-            if (length(grep("-1",models[i])>0)) {
+            if (length(grep("- 1",models[i])>0)) {
                 start[[vname]] <- rep(start[[vname]],length(pnames))
             } else {
                 start[[vname]] <- c(start[[vname]],rep(0,length(pnames)-1))
@@ -425,15 +425,11 @@ mle2 <- function(minuslogl,
     ## to try to pull out the details from the best fit ...
     ## oout <- attr(oout,"details")[[which.min(oout$fvalues)]]
     ## browser()
+    ## if (is.null(oout)
     best <- which.min(oout$fvalues)
     oout <- list(par=oout$par[[best]],
                  value=oout$fvalues[[best]],
                  convergence=oout$conv[[best]])
-  }
-  ## testing list replacement:
-  if (FALSE) {
-    z <- list(a=list(b=1:3))
-    z$a <- z$a[[1]]
   }
   if (optimizer=="nlm") {
     oout$par <- oout$estimate

@@ -1,4 +1,7 @@
+<<<<<<< .mine
 0.9.7
+ * bug fix in calc_mle2_function for no-intercept models
+  (thanks to Colin Kremer)
  * fixed optimx, added 'user' option
 
 0.9.6
