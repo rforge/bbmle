@@ -127,13 +127,14 @@ calc_mle2_function(formula,parameters,start,
 \examples{
 x <- 0:10
 y <- c(26, 17, 13, 12, 20, 5, 9, 8, 5, 4, 8)
+d <- data.frame(x,y)
 LL <- function(ymax=15, xhalf=6)
     -sum(stats::dpois(y, lambda=ymax/(1+x/xhalf), log=TRUE))
 ## uses default parameters of LL
 (fit <- mle2(LL))
 mle2(LL, fixed=list(xhalf=6))
 
-(fit0 <- mle2(y~dpois(lambda=ymean),start=list(ymean=mean(y))))
+(fit0 <- mle2(y~dpois(lambda=ymean),start=list(ymean=mean(y)),data=d))
 anova(fit0,fit)
 summary(fit)
 logLik(fit)
@@ -160,6 +161,7 @@ cov2cor(vcov(fit2))
 
 mle2(y~dpois(lambda=exp(lymax)/(1+x/exp(lhalf))),
    start=list(lymax=0,lhalf=0),
+   data=d,
    parameters=list(lymax~1,lhalf~1))
 
 ## try bounded optimization with nlminb and constrOptim
@@ -177,7 +179,7 @@ g <- factor(sample(c("a","b"),200,replace=TRUE))
 y <- rnbinom(200,mu=exp(lymax[g])/(1+x/exp(lhalf)),size=2)
 
 fit3 <- mle2(y~dnbinom(mu=exp(lymax)/(1+x/exp(lhalf)),size=exp(logk)),
-    parameters=list(lymax~g),
+    parameters=list(lymax~g),data=d,
     start=list(lymax=0,lhalf=0,logk=0))
 
 }
