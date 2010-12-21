@@ -57,6 +57,7 @@ calc_mle2_function <- function(formula,
                                parameters,
                                start,
                                parnames,
+                               use.deriv=FALSE,
                                data=NULL,
                                trace=FALSE) {
   RHS <- formula[[3]]
@@ -64,6 +65,9 @@ calc_mle2_function <- function(formula,
   ## need to check on variable order:
   ## should it go according to function/formula,
   ##   not start?
+  ## BUG/FIXME: data evaluates to 'FALSE' at this point -- regardless of whether
+  ## it has been specified
+  if (!is.list(data)) stop("must specify data argument (as a list or data frame) when using formula argument")
   vecstart <- (is.numeric(start))
   if (vecstart) start <- as.list(start) ## ??
   if (missing(parnames) || is.null(parnames)) {
@@ -123,16 +127,29 @@ calc_mle2_function <- function(formula,
     ## is there a better way to do this?
     pars <- unlist(as.list(match.call())[-1])
     if (!is.null(parameters)) {
-      ## browser()
       for (i in seq(along=parameters)) {
         assign(vars[i],mmats[[i]] %*% pars[vpos[[i]]])
       }
     }
+    ## if (is.null(data) || !is.list(data))
+    ## stop("data argument must be specified when using formula interface")
+    ## BUG/FIXME: data evaluates to 'FALSE' at this point -- regardless of whether
+    ## it has been specified
     arglist2 <- lapply(arglist1,eval,envir=data,enclos=sys.frame(sys.nframe()))
-    r <- -sum(do.call(ddistn,arglist2))
+    if (use.deriv) {
+      stop("use.deriv is not yet implemented")
+      ## minor hack -- should store information otherwise -- could have
+      ##  different numbers of arguments for different distributions?
+      LLform <- get(gsub("^d","s",as.character(RHS[[1]])))(NA,NA)$formula
+      avals <- as.list(formula[[3]][-1])
+      for (i in seq_along(avals))
+        LLform <- gsub(names(avals)[i],avals[[i]],LLform)
+      r <- eval(deriv(parse(text=LLform),parnames),envir=c(arglist2,data))
+    } else {
+      r <- -sum(do.call(ddistn,arglist2))
+    }
     ## doesn't work yet -- need to eval arglist in the right env ...
     ## if (debugfn) cat(unlist(arglist),r,"\n")
-    ## browser()
     if (trace) cat(pars,r,"\n")
     r
   }
@@ -188,9 +205,9 @@ mle2 <- function(minuslogl,
                        paste(sapply(parameters,pf),collapse=", "),sep=": ")
     }
     tmp <- calc_mle2_function(minuslogl,parameters,
-                              start,
-                              parnames,
-                              data,trace)
+                              start=start,
+                              parnames=parnames,
+                              data=data,trace=trace)
     minuslogl <- tmp$fn
     start <- tmp$start
     fdata <- tmp$fdata
@@ -210,7 +227,6 @@ mle2 <- function(minuslogl,
   call$control$parscale <- eval.parent(call$control$parscale)
   call$control$ndeps <- eval.parent(call$control$ndeps)
   call$control$maxit <- eval.parent(call$control$maxit)
-  ##   browser()
   if(!missing(start))
     if (!is.list(start)) {
       if (is.null(names(start)) || !is.vector(start))
@@ -285,7 +301,6 @@ mle2 <- function(minuslogl,
   ## attach(data,warn.conflicts=FALSE)
   ## on.exit(detach(data))
   denv <- local(environment(),c(as.list(data),fdata,list(mleenvset=TRUE)))
-  ## browser()
   ## denv <- local(new.env(),c(as.list(data),fdata,list(mleenvset=TRUE)))
   argnames.in.data <- names(data)[names(data) %in% names(formals(minuslogl))]
   args.in.data <- lapply(argnames.in.data,get,env=denv)
@@ -354,7 +369,6 @@ mle2 <- function(minuslogl,
     skip.hessian <- TRUE
     oout <- list(par=start, value=objectivefunction(start),
                  hessian = matrix(NA,nrow=length(start),ncol=length(start)))
-    ## browser()
   } else {
     oout <- switch(optimizer,
                    optim = {
@@ -424,7 +438,6 @@ mle2 <- function(minuslogl,
     ##  have the same length, in this class length 1].  Why??  I'm going
     ## to try to pull out the details from the best fit ...
     ## oout <- attr(oout,"details")[[which.min(oout$fvalues)]]
-    ## browser()
     ## if (is.null(oout)
     best <- which.min(oout$fvalues)
     oout <- list(par=oout$par[[best]],
@@ -542,7 +555,7 @@ setMethod("profile", "mle2",
                     alpha = 0.01, zmax = sqrt(qchisq(1 - alpha/2, p)),
                     del = zmax/5, trace = FALSE, skiperrs=TRUE,
                     std.err, tol.newmin = 0.001, debug=FALSE,
-                    prof.lower, prof.upper, ...) {
+                    prof.lower, prof.upper, skip.hessian=TRUE, ...) {
               ## fitted: mle2 object
               ## which: which parameters to profile (numeric or char)
               ## maxsteps: steps to take looking for zmax
@@ -597,7 +610,6 @@ setMethod("profile", "mle2",
                         if (zz > (-tol.newmin)) {
                             zz <- 0
                         } else {
-                            ## browser()
                             cat("Profiling has found a better solution,",
                                 "so original fit had not converged:\n")
                             cat(sprintf("(new deviance=%1.4g, old deviance=%1.4g, diff=%1.4g)",
@@ -629,7 +641,6 @@ setMethod("profile", "mle2",
                 if (any(is.na(std.err)))
                   std.err[is.na(std.err)] <- summ@coef[is.na(std.err)]
             }
-            ## if (!missing(std.err)) browser()
             if (any(is.na(std.err))) {
               std.err <- sqrt(1/diag(fitted@details$hessian))
               if (any(is.na(std.err))) {
@@ -646,6 +657,7 @@ setMethod("profile", "mle2",
             prof <- vector("list", length = length(which))
             names(prof) <- Pnames[which]
             call <- fitted@call
+            call$skip.hessian <- skip.hessian ## BMB: experimental
             call$minuslogl <- fitted@minuslogl
             ndeps <- eval.parent(call$control$ndeps)
             parscale <- eval.parent(call$control$parscale)
