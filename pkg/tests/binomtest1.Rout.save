@@ -1,7 +1,8 @@
 
-R version 2.11.1 (2010-05-31)
+R version 2.12.1 (2010-12-16)
 Copyright (C) 2010 The R Foundation for Statistical Computing
 ISBN 3-900051-07-0
+Platform: i486-pc-linux-gnu (32-bit)
 
 R is free software and comes with ABSOLUTELY NO WARRANTY.
 You are welcome to redistribute it under certain conditions.
@@ -21,6 +22,7 @@ Type 'q()' to quit R.
 > library(bbmle)
 Loading required package: stats4
 Loading required package: numDeriv
+Loading required package: lattice
 > 
 > funcresp <-
 + structure(list(Initial = as.integer(c(5, 5, 10, 10, 15, 15, 20, 
@@ -111,4 +113,4 @@ h 0.006987227 0.02638541
 > 
 > proc.time()
    user  system elapsed 
-  4.572   0.048   4.676 
+  2.484   0.196   2.638 
