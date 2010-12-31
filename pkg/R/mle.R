@@ -138,6 +138,7 @@ calc_mle2_function <- function(formula,
     arglist2 <- lapply(arglist1,eval,envir=data,enclos=sys.frame(sys.nframe()))
     if (use.deriv) {
       stop("use.deriv is not yet implemented")
+      browser()
       ## minor hack -- should store information otherwise -- could have
       ##  different numbers of arguments for different distributions?
       LLform <- get(gsub("^d","s",as.character(RHS[[1]])))(NA,NA)$formula
@@ -180,6 +181,7 @@ mle2 <- function(minuslogl,
                  parnames=NULL,
                  skip.hessian=FALSE,
                  hessian.opts=NULL,
+                 use.ginv=TRUE,
                  trace=FALSE,
                  browse_obj=FALSE,
                  transform=NULL, ## stub
@@ -404,7 +406,8 @@ mle2 <- function(minuslogl,
                                     upper=call$upper),
                                arglist))
                    },
-                   nlm = nlm(f=objectivefunction, p=start, hessian=!skip.hessian, ...),
+                   nlm = nlm(f=objectivefunction, p=start, hessian=FALSE, ...),
+                     ##!skip.hessian, 
                    nlminb = nlminb(start=start,
                      objective=objectivefunction, hessian=NULL, ...),
                    constrOptim = constrOptim(theta=start,
@@ -483,7 +486,11 @@ mle2 <- function(minuslogl,
     tvcov <- matrix(NA,length(coef),length(coef))
   } else {
     if (length(coef)) {
-      tmphess <- try(solve(oout$hessian,silent=TRUE))
+      if (use.ginv) {
+        tmphess <- try(MASS::ginv(oout$hessian))
+      } else {
+        tmphess <- try(solve(oout$hessian,silent=TRUE))
+      }
       if (class(tmphess)=="try-error") {
         tvcov <- matrix(NA,length(coef),length(coef))
         warning("couldn't invert Hessian")
@@ -624,7 +631,7 @@ setMethod("profile", "mle2",
                     }
                     z <- sgn * sqrt(zz)
                     pvi <<- rbind(pvi, ri)
-                    zi <<- c(zi, z)
+                    zi <<- c(zi, z) ## nb GLOBAL set
                 }
                 if (trace) cat(bi, z, "\n")
                 z
@@ -699,43 +706,63 @@ setMethod("profile", "mle2",
                   { lower[i]
                   } else -Inf
                 ubound <- if (!missing(prof.upper)) prof.upper[i] else if (valf(upper)) upper[i] else Inf
+                stop_bound <- stop_na <- stop_cutoff <- stop_flat <- FALSE
                 while ((step <- step + 1) < maxsteps && abs(z) < zmax) {
                   curval <- B0[i] + sgn * step * del * std.err[i]
                   if ((sgn==-1 & curval<lbound) ||
-                      (sgn==1 && curval>ubound)) break
+                      (sgn==1 && curval>ubound)) {
+                    stop_bound <- TRUE; break
+                  }
                   z <- onestep(step)
+                  if (step>1 && (identical(oldcurval,curval) || identical(oldz,z))) {
+                    stop_flat <- TRUE; break
+                  }
+                  oldcurval <- curval
+                  oldz <- z
                   if (newpars_found) return(z)
-                  if(is.na(z)) break
+                  if(is.na(z)) {
+                    stop_na <- TRUE; break
+                  }
                   lastz <- z
                 }
-                if (step==maxsteps) warning("hit maximum number of steps")
-                if(abs(lastz) < zmax) {
+                stop_cutoff <- (!is.na(z) && abs(z)>=zmax)
+                stop_maxstep <- (step==maxsteps)
+                if (debug) {
+                  if (stop_na) cat("encountered NA\n")
+                  if (stop_cutoff) cat("above cutoff\n")
+                }
+                if (stop_flat) {
+                  warning("stepsize effectively zero/flat profile")
+                } else {
+                  if (stop_maxstep) warning("hit maximum number of steps")
+                  if(!stop_cutoff) {
                     if (debug) cat("haven't got to zmax yet, trying harder\n")
                     ## now let's try a bit harder if we came up short
                     for(dstep in c(0.2, 0.4, 0.6, 0.8, 0.9)) {
-                    curval <- B0[i] + sgn * (step-1+dstep) * del * std.err[i]
-                    if ((sgn==-1 & curval<lbound) ||
-                      (sgn==1 && curval>ubound)) break
-                    z <- onestep(step - 1 + dstep)
-                    if (newpars_found) return(z)
-                    if(is.na(z) || abs(z) > zmax) break
-                    lastz <- z
-                  }
-                  if ((abs(lastz) < zmax) &&
-                      ((sgn==-1 && lbound>-Inf) || (sgn==1 && ubound<Inf))) {
+                      curval <- B0[i] + sgn * (step-1+dstep) * del * std.err[i]
+                      if ((sgn==-1 & curval<lbound) ||
+                          (sgn==1 && curval>ubound)) break
+                      z <- onestep(step - 1 + dstep)
+                      if (newpars_found) return(z)
+                      if(is.na(z) || abs(z) > zmax) break
+                      lastz <- z
+                    }
+                    if (!stop_cutoff && stop_bound) {
                       if (debug) cat("bounded and didn't make it, try at boundary\n")
-                    ## bounded and didn't make it, try at boundary
-                    if (sgn==-1 && B0[i]>lbound) onestep(bi=lbound)
-                    if (sgn==1  && B0[i]<ubound) onestep(bi=ubound)
-                  }
-                } else if(length(zi) < 5) { # try smaller steps
-                  mxstep <- step - 1
-                  step <- 0.5
-                  while ((step <- step + 1) < mxstep) {
-                    onestep(step)
-                  }
-                }
-              }
+                      ## bounded and didn't make it, try at boundary
+                      if (sgn==-1 && B0[i]>lbound) onestep(bi=lbound)
+                      if (sgn==1  && B0[i]<ubound) onestep(bi=ubound)
+                    }
+                  } else if (length(zi) < 5) { # try smaller steps
+                    if (debug) cat("try smaller steps\n")
+                    mxstep <- step - 1
+                    step <- 0.5
+                    while ((step <- step + 1) < mxstep) {
+                      onestep(step)
+                    }
+                  } ## smaller steps
+                } ## !zero stepsize
+              } ## step in both directions
               si <- order(pvi[, i])
               prof[[p.i]] <- data.frame(z = zi[si])
               prof[[p.i]]$par.vals <- pvi[si,, drop=FALSE]
@@ -1237,7 +1264,9 @@ function (object, parm, level = 0.95, trace=FALSE, ...)
     sp <- if (is.matrix(pv)) {
       spline(x = pv[, Pnames[pm]], y = pro[, 1])
     } else spline(x = pv, y = pro[, 1])
-    ci[Pnames[pm], ] <- approx(sp$y, sp$x, xout = cutoff)$y
+    tt <- try(approx(sp$y, sp$x, xout = cutoff)$y,silent=TRUE)
+    if (inherits(tt,"try-error")) tt <- rep(NA,2)
+    ci[Pnames[pm], ] <- tt
   }
   drop(ci)
 })
@@ -1437,7 +1466,7 @@ function (fitted, which = 1:p, maxsteps = 100,
             else stop("profiling has found a better solution, so original fit had not converged")
             z <- sgn * sqrt(zz)
             pvi <<- rbind(pvi, ri)
-            zi <<- c(zi, z)
+            zi <<- c(zi, z) ## NB global set!
         }
         if (trace) cat(bi, z, "\n")
         z

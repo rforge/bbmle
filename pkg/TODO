@@ -1,6 +1,10 @@
 BUGS/ISSUES:
 
+* ask MM about mismatch between confint (approx) and profile plot (backspline) ... ?
+* DISABLE boundary warning when profiling ...
+* try to do something about rescaling when hessian is problematic?
 * add ginv for problematic hessians?
+* implement 'subset' argument
 * check problems with optimizer="optimize" in tests/parscale.R
 * allow ICtab etc. to recognize optim(), optimize() fits
   (ASSUMING that the function was a NLL)

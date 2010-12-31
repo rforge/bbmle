@@ -15,27 +15,29 @@ parameters=NULL,
 parnames=NULL,
 skip.hessian=FALSE,
 hessian.opts=NULL,
+use.ginv=TRUE,
 trace=FALSE,
 browse_obj=FALSE,
 transform=NULL,
 gr,
 optimfun,\dots)
 calc_mle2_function(formula,parameters,start,
-   parnames,data=NULL,trace=FALSE)
+   parnames, use.deriv=FALSE, data=NULL,trace=FALSE)
 }
 \arguments{
   \item{minuslogl}{Function to calculate negative log-likelihood,
-  or a formula.}
-  \item{start}{Named list. Initial values for optimizer.}
+  or a formula}
+  \item{start}{Named list. Initial values for optimizer}
   \item{method}{Optimization method to use. See \code{\link{optim}}.}
   \item{optimizer}{Optimization function to use. Currently available
     choices are "optim" (the default), "nlm", "nlminb", "constrOptim",
-    "optimx", and "optimize". (\emph{Warning:} Options other than the default are rather
-    poorly tested.)
+    "optimx", and "optimize". (\emph{Warning:} Options other than the
+    default may be poorly tested, use with caution.)
   }
   \item{fixed}{Named list.  Parameter values to keep fixed during
     optimization.}
-  \item{data}{list of data to pass to minuslogl}
+  \item{data}{list of data to pass to negative log-likelihood function: must
+    be specified if \code{minuslogl} is specified as a formula}
   \item{subset}{logical vector for subsetting data (STUB)}
   \item{default.start}{Logical: allow default values of \code{minuslogl}
     as starting values?}
@@ -58,8 +60,12 @@ calc_mle2_function(formula,parameters,start,
   \item{skip.hessian}{Bypass Hessian calculation?}
   \item{hessian.opts}{Options for Hessian calculation, passed through to
     the \code{\link[numDeriv]{hessian}} function}
+  \item{use.ginv}{Use generalized inverse (\code{\link[MASS]{ginv}}) to
+    compute approximate variance-covariance}
   \item{optimfun}{user-supplied optimization function. Must take exactly
     the same arguments and return exactly the same structure as \code{\link{optim}}.}
+  \item{use.deriv}{(experimental, not yet implemented): construct symbolic
+     derivatives based on formula?}
 }
 \details{
   The \code{\link{optim}} optimizer is used to find the minimum of the
@@ -120,6 +126,17 @@ calc_mle2_function(formula,parameters,start,
   If \code{lower}, \code{upper}, \code{control$parscale},
   or \code{control$ndeps} are specified for \code{optim}
   fits, they must be named vectors.
+
+  The requirement that \code{data} be specified when using
+  the formula interface is relatively new: it saves many
+  headaches on the programming side when evaluating the
+  likelihood function later on (e.g. for profiling or
+  constructing predictions).  Since \code{data.frame} uses
+  the names of its arguments as column names by default, it
+  is probably the easiest way to package objects that are
+  lying around in the global workspace for use in \code{mle2}
+  (provided they are all of the same length). 
+  
 }
 \seealso{
   \code{\link{mle2-class}}
@@ -177,11 +194,11 @@ lhalf <- 0
 x <- sort(runif(200))
 g <- factor(sample(c("a","b"),200,replace=TRUE))
 y <- rnbinom(200,mu=exp(lymax[g])/(1+x/exp(lhalf)),size=2)
+d2 <- data.frame(x,g,y)
 
 fit3 <- mle2(y~dnbinom(mu=exp(lymax)/(1+x/exp(lhalf)),size=exp(logk)),
-    parameters=list(lymax~g),data=d,
+    parameters=list(lymax~g),data=d2,
     start=list(lymax=0,lhalf=0,logk=0))
-
 }
 \keyword{models}
 
