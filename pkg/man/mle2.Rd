@@ -31,7 +31,9 @@ calc_mle2_function(formula,parameters,start,
   \item{method}{Optimization method to use. See \code{\link{optim}}.}
   \item{optimizer}{Optimization function to use. Currently available
     choices are "optim" (the default), "nlm", "nlminb", "constrOptim",
-    "optimx", and "optimize". (\emph{Warning:} Options other than the
+    "optimx", and "optimize". If "optimx" is used, (1) the \code{optimx}
+    package must be explicitly loaded with \code{\link{load}} or
+    \code{\link{require}}(\emph{Warning:} Options other than the
     default may be poorly tested, use with caution.)
   }
   \item{fixed}{Named list.  Parameter values to keep fixed during
@@ -142,7 +144,16 @@ calc_mle2_function(formula,parameters,start,
   the names of its arguments as column names by default, it
   is probably the easiest way to package objects that are
   lying around in the global workspace for use in \code{mle2}
-  (provided they are all of the same length). 
+  (provided they are all of the same length).
+
+  When \code{optimizer} is set to "optimx" and multiple
+  optimization methods are used (i.e. the \code{methods}
+  argument has more than one element, or \code{all.methods=TRUE}
+  is set in the control options), the best (minimum
+  negative log-likelihood) solution will be saved,
+  regardless of reported convergence status
+  (and future operations such as profiling on the fit
+  will only use the method that found the best result).
   
 }
 \seealso{

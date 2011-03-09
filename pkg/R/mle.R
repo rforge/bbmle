@@ -60,6 +60,9 @@ calc_mle2_function <- function(formula,
                                use.deriv=FALSE,
                                data=NULL,
                                trace=FALSE) {
+  ## resid=FALSE
+  ##  stub: what was I going to use this for ???
+  ##  returning residuals rather than mle (e.g. for minpack.nls??)
   RHS <- formula[[3]]
   ddistn <- as.character(RHS[[1]])
   ## need to check on variable order:
@@ -407,7 +410,8 @@ mle2 <- function(minuslogl,
                                arglist))
                    },
                    nlm = nlm(f=objectivefunction, p=start, hessian=FALSE, ...),
-                     ##!skip.hessian, 
+                     ##!skip.hessian,
+                   ## <http://netlib.bell-labs.com/cm/cs/cstr/153.pdf>
                    nlminb = nlminb(start=start,
                      objective=objectivefunction, hessian=NULL, ...),
                    constrOptim = constrOptim(theta=start,
@@ -437,15 +441,19 @@ mle2 <- function(minuslogl,
                      nlm="minimum",
                      optimize=, optimise=, nlminb="objective")
   if (optimizer=="optimx") {
-    ## HACK: oout from optimx is a data frame [therefore all elements must
-    ##  have the same length, in this class length 1].  Why??  I'm going
-    ## to try to pull out the details from the best fit ...
-    ## oout <- attr(oout,"details")[[which.min(oout$fvalues)]]
-    ## if (is.null(oout)
-    best <- which.min(oout$fvalues)
+    fvals <- unlist(oout$fvalues)
+    conv <- unlist(oout$conv)
+    ## best <- if (!any(conv==0)) {
+    best <- which.min(fvals)
+    ##    } else {
+    ## fvals <- fvals[conv==0]
+    ## which.min(fvals)
+    ## }
     oout <- list(par=oout$par[[best]],
-                 value=oout$fvalues[[best]],
-                 convergence=oout$conv[[best]])
+                 value=fvals[best],
+                 convergence=conv[best],
+                 method.used=oout$method[[best]])
+    ## FIXME: should do profiles only with best method for MLE?
   }
   if (optimizer=="nlm") {
     oout$par <- oout$estimate
@@ -471,7 +479,6 @@ mle2 <- function(minuslogl,
     if (is.null(psc)) {
       oout$hessian <- try(hessian(objectivefunction,oout$par,method.args=hessian.opts))
     } else {
-      cat(oout$par,"\n")
       tmpf <- function(x) {
         objectivefunction(x*psc)
       }
@@ -529,9 +536,12 @@ setMethod("show", "mle2", function(object){
     print(coef(object))
     cat("\nLog-likelihood: ")
     cat(round(as.numeric(logLik(object)),2),"\n")
+    if (object@optimizer=="optimx" && length(object@method)>1) {
+      cat("Best method:",object@details$method.used,"\n")
+    }
     if (object@details$convergence>0)
       cat("\nWarning: optimization did not converge (code ",
-          object@details$convergence,")\n",sep="")
+          object@details$convergence,": ",object@details$message,")\n",sep="")
   })
 
 setMethod("show", "summary.mle2", function(object){
@@ -571,7 +581,9 @@ setMethod("profile", "mle2",
               ## del: stepsize
               ## trace:
               ## skiperrs:
-              
+            if (fitted@optimizer=="optimx") {
+              fitted@call$method <- fitted@details$method.used
+            }
             if (fitted@optimizer=="constrOptim")
               stop("profiling not yet working for constrOptim -- sorry")
             Pnames <- names(fitted@coef)
