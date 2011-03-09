@@ -44,7 +44,10 @@ calc_mle2_function(formula,parameters,start,
   \item{eval.only}{Logical: return value of \code{minuslogl(start)}
     rather than optimizing}
   \item{vecpar}{Logical: is first argument a vector of all parameters?
-    (For compatibility with \code{\link{optim}}.)}
+    (For compatibility with \code{\link{optim}}.)
+  If \code{vecpar} is \code{TRUE}, then you should use
+  \code{\link{parnames}} to define the parameter names for the
+  negative log-likelihood function.}
   \item{parameters}{List of linear models for parameters.
     \emph{MUST BE SPECIFIED IN THE SAME ORDER as the start vector
       (this is a bug/restriction that I hope to fix soon, but in
@@ -106,8 +109,12 @@ calc_mle2_function(formula,parameters,start,
   is failing if you use \code{method="Nelder-Mead"} and still
   get a finite-difference error.)
   
-  If convergence fails, see \code{\link{optim}}
-  for the meanings of the error codes.
+  If convergence fails, see the manual page of the
+  relevant optimizer (\code{\link{optim}} by default,
+  but possibly \code{\link{nlm}}, \code{\link{nlminb}},
+  \code{\link[optimx]{optimx}}, or \code{\link{constrOptim}}
+  if you have set the value of \code{optimizer})
+  for the meanings of the error codes/messages.
 }
 \value{
   An object of class \code{"mle2"}.
