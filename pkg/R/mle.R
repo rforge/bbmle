@@ -1273,11 +1273,16 @@ function (object, parm, level = 0.95, trace=FALSE, ...)
   for (pm in parm) {
     pro <- object@profile[[Pnames[pm]]]
     pv <- pro[,"par.vals"]
-    sp <- if (is.matrix(pv)) {
-      spline(x = pv[, Pnames[pm]], y = pro[, 1])
-    } else spline(x = pv, y = pro[, 1])
-    tt <- try(approx(sp$y, sp$x, xout = cutoff)$y,silent=TRUE)
-    if (inherits(tt,"try-error")) tt <- rep(NA,2)
+    if (is.matrix(pv)) pv <- pv[,Pnames[pm]]
+    if (any(diff(pro[,1])<0)) {
+      warning("non-monotonic profile: reverting from spline to linear approximation",
+              "(consider running 'profile' with manually reduced std.err)")
+      tt <- approx(pro[,1],pv,xout=cutoff)$y
+    } else {
+      sp <- spline(x = pv, y = pro[, 1])
+      tt <- try(approx(sp$y, sp$x, xout = cutoff)$y,silent=TRUE)
+      if (inherits(tt,"try-error")) tt <- rep(NA,2)
+    }
     ci[Pnames[pm], ] <- tt
   }
   drop(ci)
@@ -1324,7 +1329,8 @@ function (object, parm, level = 0.95, method,
     if (method=="uniroot") {
       chisqcutoff <- qchisq(level,1)
       call <- object@call
-      call$start <- as.list(B0) ## added
+      if (!isTRUE(call$vecpar))
+        call$start <- as.list(B0) ## added
       for (pm in parm) {
         critfun <- function(step)
           {
