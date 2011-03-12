@@ -1,9 +1,15 @@
 BUGS/ISSUES:
 
-* ask MM about mismatch between confint (approx) and profile plot (backspline) ... ?
+* fix confint plot to use linear interpolation when non-monotonic
+* pass parameters through from confint to profile
+* nobs() methods
+* filter use.ginv properly
+* fix gradient with profile
+
+* work on vignette: ask MM/PD/BDR about mismatch between confint (approx) and profile plot (backspline) ... ?
 * DISABLE boundary warning when profiling ...
 * try to do something about rescaling when hessian is problematic?
-* add ginv for problematic hessians?
+* add ginv for problematic hessians? (done)
 * implement 'subset' argument
 * check problems with optimizer="optimize" in tests/parscale.R
 * allow ICtab etc. to recognize optim(), optimize() fits
@@ -13,7 +19,7 @@ BUGS/ISSUES:
 * prettier profile plots (with lattice)?  xyplot for profiles?
 * make sure numeric deriv modifications are working
 
-* incorporate optimx?  minpack.lm?
+* incorporate optimx (done)?  minpack.lm?
 
 * proper initialization of intercept-less parameter()
     entries

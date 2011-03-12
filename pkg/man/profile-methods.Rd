@@ -2,6 +2,7 @@
 \docType{methods}
 \alias{profile-methods}
 \alias{profile,mle2-method}
+\alias{profile.mle2}
 \title{Likelihood profiles }
 \description{
   Create likelihood profiles for a fitted model
