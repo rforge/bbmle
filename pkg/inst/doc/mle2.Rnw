@@ -441,7 +441,7 @@ computed.
 \item{by default, uses \code{MASS::ginv} (generalized inverse) rather than \code{solve} to invert
     Hessian (more robust to positive-semidefinite Hessians \ldots)}
 \item{can use \code{vecpar=TRUE} (and \code{parnames()}) to use objective functions with parameters
-    specified as vectors (for compatibility with \code{optim} etc.)
+    specified as vectors (for compatibility with \code{optim} etc.)}
 \end{itemize}
 
 
@@ -540,7 +540,8 @@ print(ggplot(subset(prof4_df,abs(z)<3),
 
 This section describes the algorithm for constructing profiles
 and confidence intervals, which is not otherwise documented anywhere
-except in the code.
+except in the code.  * indicates changes from the version
+in \code{stats4:::mle}
 
 \subsubsection{Estimating standard error}
 
@@ -553,16 +554,16 @@ is a good guess.
 \item if \code{std.err} is missing, extract the 
   standard error from the summary coefficient table (ultimately computed from 
   \code{sqrt(diag(inverse Hessian))} of the fit)
-\item a user-set value of \code{std.err} overrides this behavior 
+\item * a user-set value of \code{std.err} overrides this behavior 
   unless the value is specified as \code{NA} (in which
   case the estimate from the previous step is used)
-\item if the standard error value is still \code{NA} (i.e. the
+\item * if the standard error value is still \code{NA} (i.e. the
   user did not specify it and the value estimated from the Hessian
   is missing or \code{NA}) use \code{sqrt(1/diag(hessian))}. This
   represents a (fairly feeble) attempt to come up with a plausible number
   when the Hessian is not positive definite but still has positive diagonal
   entries
-\item if all else fails, stop and print an error message that encourages
+\item if all else fails, stop and * print an error message that encourages
   the user to specify the values with \code{std.err}
 \end{itemize}
   
@@ -623,7 +624,7 @@ is a good guess.
     \item{Stop the profiling: 
       \begin{itemize}
         \item if $z$ doesn't change from the previous step (\verb+stop_flat+)
-        \item stop if $z$ is less than \code{tol.newmin} (default: 0.001) units 
+        \item * stop if $z$ is less than \code{tol.newmin} (default: 0.001) units 
           \emph{better} than the MLE fit, i.e. $z<-\mbox{\code{tol.newmin}}$
           (if $-\mbox{\code{tol.newmin}}<z<0$, set $z$ to zero) (\verb+newpars_found+)
         \item if $z$ is \code{NA} (\verb+stop_na+) \bbnote{(for greater robustness, should
@@ -637,7 +638,7 @@ is a good guess.
         go \emph{almost} one more \code{del*std.err} unit out (in intervals
         of 0.2, 0.4, 0.6, 0.8, 0.9) (\bbnote{also seems reasonable but don't
           know where it comes from})
-      \item if we violated the boundary but did not reach the cutoff
+      \item * if we violated the boundary but did not reach the cutoff
         (\verb+!stop_cutoff && stop_bound+), evaluate $z$ at the boundary
       \item if we got to the cutoff in $<5$ steps, try smaller steps:
 <<eval=FALSE>>=
@@ -648,7 +649,7 @@ while ((step <- step + 1) < mxstep) {
 }
 @ 
 (\bbnote{I haven't figured this out yet})
-\end{itemize}       
+\end{itemize}
 
 \subsubsection{Confidence intervals}
 
@@ -660,7 +661,7 @@ difference with the cutoff value for $\chi^2_1$).
 
 \begin{itemize}
 \item If necessary, construct the profile
-\item If the profile of the signed square root is non-monotonic,
+\item * If the profile of the signed square root is non-monotonic,
   warn the user and revert to linear approximation on the profiled points
   to find the cutoffs:
 \item Otherwise, build an interpolation spline of $z$ (signed square root deviance
@@ -690,7 +691,7 @@ values designated by \code{conf} (default: $\{0.99,0.95,0.9,0.8,0.5\}$).
   rather than \code{spline} as in the confidence interval method (\bbnote{why this
     difference?})
 \item attempt to construct the inverse of the interpolation spline (using \code{backSpline})
-\item if this fails warn the user (assume this was due to non-monotonicity)
+\item * if this fails warn the user (assume this was due to non-monotonicity)
   and try to use \code{uniroot} and \code{predict} to find cutoff values
 \item otherwise, use the inverse spline to find cutoff values
 \end{itemize}

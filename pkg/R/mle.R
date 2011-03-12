@@ -1,6 +1,5 @@
 ## require(methods,quietly=TRUE)  ## for independence from stats4
 require(numDeriv,quietly=TRUE) ## for hessian()
-## require(nlme) ## for fdHess() ## argh.  BIC conflict.
 
 call.to.char <- function(x) {
     ## utility function
@@ -348,11 +347,15 @@ mle2 <- function(minuslogl,
           } else { args <- c(l,args.in.data)
                  }
           v <- do.call("gr",args)
-          if (length(fixed)>0) warning("gradient functions untested with profiling")
-          names(v) <- names(p)
-##           v <- v[-nfix]
-          v <- v[!names(v) %in% nfix] ## from Eric Weese
-          v
+          if (length(v)==length(p)) {
+            ## already adjusted for length
+            names(v) <- names(p)
+          } else {
+            if (is.null(names(v))) {
+              names(v) <- names(formals(minuslogl))
+            }
+          }
+          v[!names(v) %in% nfix] ## from Eric Weese
         } ## end of gradient function
   ## FIXME: try to do this by assignment into appropriate
   ##    environments rather than replacing them ...
@@ -1174,28 +1177,36 @@ function (x, levels, which=1:p, conf = c(99, 95, 90, 80, 50)/100,
         ## cat("**",i,obj[[i]]$par.vals[,i],obj[[i]]$z,"\n")
         ## FIXME: reconcile this with confint!
         yvals <- obj[[i]]$par.vals[,nm[i],drop=FALSE]
-        sp <- splines::interpSpline(yvals, obj[[i]]$z,
-                                    na.action=na.omit)
-        bsp <- try(splines::backSpline(sp),silent=TRUE)
-        bsp.OK <- (class(bsp)[1]!="try-error")
-        if (bsp.OK) {
-            predfun <- function(y) { predict(bsp,y)$y }
-        } else { ## backspline failed
-            warning("non-monotonic profile: confidence limits may be unreliable")
+        avals <- data.frame(x=unname(yvals), y=obj[[i]]$z)
+        if (!all(diff(obj[[i]]$z)>0)) {
+          warning("non-monotonic profile: reverting to linear interpolation.  Consider setting std.err manually")
+          predback <- approxfun(obj[[i]]$z,yvals)
+        } else {
+          sp <- splines::interpSpline(yvals, obj[[i]]$z,
+                                      na.action=na.omit)
+          avals <- rbind(avals,as.data.frame(predict(sp)))
+          avals <- avals[order(avals$x),]
+          bsp <- try(splines::backSpline(sp),silent=TRUE)
+          bsp.OK <- (class(bsp)[1]!="try-error")
+          if (bsp.OK) {
+            predback <- function(y) { predict(bsp,y)$y }
+          } else { ## backspline failed
+            warning("backspline failed: using uniroot(), confidence limits may be unreliable")
             ## what do we do?
             ## attempt to use uniroot
-            predfun <- function(y) {
-                pfun0 = function(z1) {
-                    t1 = try(uniroot(function(z) {
-                        predict(sp,z)$y-z1
-                    }, range(obj[[i]]$par.vals[,nm[i]])),silent=TRUE)
-                    if (class(t1)[1]=="try-error") NA else t1$root
+            predback <- function(y) {
+              pfun0 <- function(z1) {
+                t1 <- try(uniroot(function(z) {
+                  predict(sp,z)$y-z1
+                }, range(obj[[i]]$par.vals[,nm[i]])),silent=TRUE)
+                if (class(t1)[1]=="try-error") NA else t1$root
                 }
-                sapply(y,pfun0)
+              sapply(y,pfun0)
             }
+          }
         }
         ## </FIXME>
-        if (no.xlim) xlim <- predfun(c(-mlev, mlev))
+        if (no.xlim) xlim <- predback(c(-mlev, mlev))
         xvals <- obj[[i]]$par.vals[,nm[i]]
         if (is.na(xlim[1]))
           xlim[1] <- min(xvals)
@@ -1210,10 +1221,8 @@ function (x, levels, which=1:p, conf = c(99, 95, 90, 80, 50)/100,
                      xlim = xlim, ylim = ylim,
                      type = "n", main=main[i], ...)
             }
-            avals <- rbind(as.data.frame(predict(sp)),
-                           data.frame(x = drop(yvals), y = obj[[i]]$z))
             avals$y <- abs(avals$y)
-            lines(avals[order(avals$x), ], col = col.prof, lty=lty.prof)
+            lines(avals, col = col.prof, lty=lty.prof)
             if (show.points) points(yvals,abs(obj[[i]]$z))
         } else { ## not absVal
             if (!add) {
@@ -1223,10 +1232,10 @@ function (x, levels, which=1:p, conf = c(99, 95, 90, 80, 50)/100,
                      ylab = if (missing(ylab)) expression(z) else ylab,
                      type = "n", main=main[i], ...)
             }
-            lines(predict(sp), col = col.prof, lty=lty.prof)
+            lines(avals, col = col.prof, lty=lty.prof)
             if (show.points) points(yvals,obj[[i]]$z)
         }
-        x0 <- predfun(0)
+        x0 <- predback(0)
         abline(v = x0, h=0, col = col.minval, lty = lty.minval)
         for (j in 1:length(levels)) {
             lev <- levels[j]
@@ -1235,7 +1244,7 @@ function (x, levels, which=1:p, conf = c(99, 95, 90, 80, 50)/100,
             ## far enough in either direction. That's OK for the
             ## "h" part of the plot, but the horizontal line made
             ## with "l" disappears.
-            pred <- predfun(c(-lev, lev))
+            pred <- predback(c(-lev, lev))
             ## horizontal
             if (absVal) levs=rep(lev,2) else levs=c(-lev,lev)
             lines(pred, levs, type = "h", col = col.conf, lty = 2)
