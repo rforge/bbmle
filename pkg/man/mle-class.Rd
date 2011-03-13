@@ -12,7 +12,7 @@
 \alias{coerce,mle,mle2-method}
 \alias{formula,mle2-method}
 \alias{stdEr}
-\alias{stdEr.default}
+\alias{stdEr,mle2-method}
 \title{Class "mle2". Result of Maximum Likelihood Estimation.}
 \description{This class encapsulates results of a generic maximum
   likelihood procedure.}

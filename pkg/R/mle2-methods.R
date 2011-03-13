@@ -9,13 +9,16 @@ setMethod("formula", "mle2",
             as.formula(x@formula)
           })
 
-stdEr <- function(x, ...) {
-  UseMethod("stdEr")
-}
+## stdEr <- function(x, ...) {
+##   UseMethod("stdEr")
+##  }
 
-stdEr.default <- function(x, ...) {
-  sqrt(diag(vcov(x)))
-}
+setGeneric("stdEr", function(x, ...) { standardGeneric("stdEr")})
+
+setMethod("stdEr","mle2",
+          function(x, ...) {
+            sqrt(diag(x@vcov)) ## why doesn't vcov(x) work here???
+          })
 
 ## should this be object@fullcoef or object@coef??? or should
 ## it have an additional argument --- is that possible?
