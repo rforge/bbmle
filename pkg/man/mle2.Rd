@@ -163,6 +163,9 @@ calc_mle2_function(formula,parameters,start,
 x <- 0:10
 y <- c(26, 17, 13, 12, 20, 5, 9, 8, 5, 4, 8)
 d <- data.frame(x,y)
+
+## in general it is best practice to use the `data' argument,
+##  but variables can also be drawn from the global environment
 LL <- function(ymax=15, xhalf=6)
     -sum(stats::dpois(y, lambda=ymax/(1+x/xhalf), log=TRUE))
 ## uses default parameters of LL
