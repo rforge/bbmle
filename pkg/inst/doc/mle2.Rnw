@@ -15,7 +15,7 @@
 \title{Maximum likelihood estimation and analysis
   with the \code{bbmle} package}
 \newcommand{\code}[1]{{\tt #1}}
-\newcommand{\bbnote}[1]{\color{red} \emph{#1} \color{black}}
+\newcommand{\bbnote}[1]{\color{red} {\em #1} \color{black}}
 \date{\today}
 \begin{document}
 \bibliographystyle{chicago}
@@ -629,9 +629,19 @@ is a good guess.
           for the multivariate confidence region (since we are computing univariate
           profiles) [you could at least argue that this is conservative, making
           the region a little bigger than it needs to be]; (2) why we are
-          using $1-\alpha/2$ rather than $1-\alpha$.}
+          using $1-\alpha/2$ rather than $1-\alpha$.
+        }
+        For comparison, \code{MASS::profile.glm} (written by Bates and Venables in
+        1996, ported to R by BDR in 1998) uses \code{zmax}=\code{sqrt(qchisq(1-alpha,1))}
+        \bbnote{(this makes more sense to me \ldots)}.
+        On the other hand, the profiling code in \code{lme4a} (the \code{profile}
+        method for \code{merMod}, in \code{profile.R}) uses
+        \code{qchisq(1-alphamax, nptot)} \ldots
       \item \code{del} Step size (scaled by standard error) (Default: \code{zmax}/5.)
-        \bbnote{This seems reasonable, but I don't know where it comes from.}
+        Presumably (?) copied from \code{MASS::profile.glm}, 
+        which says (in \code{?profile.glm}):
+        ``[d]efault value chosen to allow profiling at about 10 parameter
+        values.''
       \item \code{maxsteps} Maximum number of profiling steps to try in each direction. (Default: 100)
       \end{itemize}
       }
