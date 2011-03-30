@@ -178,9 +178,16 @@ mle2 <- function(minuslogl,
   }
   call <- match.call()
   call.orig <- call
-  ## bug fix??
-  ## this is a hack! would like to do a better job
-  ## consider: call <- rapply(call,eval.parent)
+  ## ?? still not sure this is the best thing to do, but:
+  ##   evaluate all elements of call
+  ##    to make sure it will still function in new environments ...
+  ## call[-1] <- lapply(call[-1],eval.parent)
+  ## call[-1] <- lapply(call[-1],eval,envir=parent.frame(),enclos=parent.frame(2))
+  ## FAILS if embedded in a funny environment (e.g. called from lapply)
+  ##  why do we need this in the first place?
+  ## FIXME: change update(), profile() to re-fit model properly
+  ##  rather than evaluating call(), or generally find a less-fragile
+  ##  way to do this.  Reverting to original form for now.
   call$data <- eval.parent(call$data)
   call$upper <- eval.parent(call$upper)
   call$lower <- eval.parent(call$lower)

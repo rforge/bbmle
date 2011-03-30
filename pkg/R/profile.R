@@ -4,7 +4,8 @@ setMethod("profile", "mle2",
                     alpha = 0.01, zmax = sqrt(qchisq(1 - alpha/2, p)),
                     del = zmax/5, trace = FALSE, skiperrs=TRUE,
                     std.err, tol.newmin = 0.001, debug=FALSE,
-                    prof.lower, prof.upper, skip.hessian=TRUE, ...) {
+                    prof.lower, prof.upper, skip.hessian=TRUE,
+                    try_harder=FALSE, ...) {
               ## fitted: mle2 object
               ## which: which parameters to profile (numeric or char)
               ## maxsteps: steps to take looking for zmax
@@ -36,9 +37,9 @@ setMethod("profile", "mle2",
                 if (is.null(call$fixed)) call$fixed <- fix
                 else call$fixed <- c(eval(call$fixed),fix)
                 if (skiperrs) {
-                    pfit <- try(eval.parent(call, 2), silent=TRUE)
+                    pfit <- try(eval.parent(call, 2L), silent=TRUE)
                 } else {
-                    pfit <- eval.parent(call, 2)
+                    pfit <- eval.parent(call, 2L)
                 }
                 ok <- ! inherits(pfit,"try-error")
                 if (debug && ok) cat(coef(pfit),-logLik(pfit),"\n")
@@ -50,7 +51,7 @@ setMethod("profile", "mle2",
                     ## pfit is current (profile) fit,
                     ##   fitted is original fit
                     ## pfit@min _should_ be > fitted@min
-                    ## thus zz below should be <0
+                    ## thus zz below should be >0
                     zz <- 2*(pfit@min - fitted@min)
                     ri <- pv0
                     ri[, names(pfit@coef)] <- pfit@coef
@@ -59,8 +60,10 @@ setMethod("profile", "mle2",
                     ##   tol.newmin,zz<(-tol.newmin),"\n")
                     if (!is.na(zz) && zz<0) {
                         if (zz > (-tol.newmin)) {
-                            zz <- 0
+                          z <- 0
+                          ## HACK for non-monotonic profiles? z <- -sgn*sqrt(abs(zz))
                         } else {
+                          ## cat() instead of warning(); FIXME use message() instead???
                             cat("Profiling has found a better solution,",
                                 "so original fit had not converged:\n")
                             cat(sprintf("(new deviance=%1.4g, old deviance=%1.4g, diff=%1.4g)",
@@ -72,8 +75,9 @@ setMethod("profile", "mle2",
                             ## return(pfit@fullcoef)
                             return(pfit) ## return full fit
                         }
+                    } else {
+                      z <- sgn * sqrt(zz)
                     }
-                    z <- sgn * sqrt(zz)
                     pvi <<- rbind(pvi, ri)
                     zi <<- c(zi, z) ## nb GLOBAL set
                 }
@@ -116,6 +120,7 @@ setMethod("profile", "mle2",
             lower <- eval.parent(call$lower)
             ## cat("upper\n")
             ## print(upper)
+            stop_msg <- list()
             for (i in which) {
               zi <- 0
               pvi <- pv0
@@ -126,9 +131,11 @@ setMethod("profile", "mle2",
                if (!is.null(parscale)) call$control$parscale <- parscale[-i]
                if (!is.null(upper) && length(upper)>1) call$upper <- upper[-i]
                if (!is.null(lower) && length(lower)>1) call$lower <- lower[-i]
+              stop_msg[[i]] <- list(down="",up="")
               for (sgn in c(-1, 1)) {
+                dir_ind <- (sgn+1)/2+1 ## (-1,1) -> (1,2)
                 if (trace) {
-                    cat("\nParameter:", p.i, c("down", "up")[(sgn + 1)/2 + 1], "\n")
+                    cat("\nParameter:", p.i, c("down", "up")[dir_ind], "\n")
                     cat("par val","sqrt(dev diff)\n")
                 }
                 step <- 0
@@ -155,22 +162,30 @@ setMethod("profile", "mle2",
                   curval <- B0[i] + sgn * step * del * std.err[i]
                   if ((sgn==-1 & curval<lbound) ||
                       (sgn==1 && curval>ubound)) {
-                    stop_bound <- TRUE; break
+                    stop_bound <- TRUE;
+                    stop_msg[[i]][[dir_ind]] <- paste(stop_msg[[i]][[dir_ind]],"hit bound")
+                    break
                   }
                   z <- onestep(step)
+                  ## experimental: DON'T STOP on flat spot or NA
                   if (step>1 && (identical(oldcurval,curval) || identical(oldz,z))) {
-                    stop_flat <- TRUE; break
+                    stop_flat <- TRUE
+                    stop_msg[[i]][[dir_ind]] <- paste(stop_msg[[i]][[dir_ind]],"hit flat spot",sep=";")
+                    if (!try_harder) break
                   }
                   oldcurval <- curval
                   oldz <- z
                   if (newpars_found) return(z)
                   if(is.na(z)) {
-                    stop_na <- TRUE; break
+                    stop_na <- TRUE
+                    stop_msg[[i]][[dir_ind]] <- paste(stop_msg[[i]][[dir_ind]],"hit NA",sep=";")
+                    if (!try_harder) break
                   }
                   lastz <- z
                 }
                 stop_cutoff <- (!is.na(z) && abs(z)>=zmax)
                 stop_maxstep <- (step==maxsteps)
+                if (stop_maxstep) stop_msg[[i]][[dir_ind]] <- paste(stop_msg[[i]][[dir_ind]],"max steps",sep=";")
                 if (debug) {
                   if (stop_na) cat("encountered NA\n")
                   if (stop_cutoff) cat("above cutoff\n")
@@ -181,6 +196,7 @@ setMethod("profile", "mle2",
                   if (stop_maxstep) warning("hit maximum number of steps")
                   if(!stop_cutoff) {
                     if (debug) cat("haven't got to zmax yet, trying harder\n")
+                    stop_msg[[i]][[dir_ind]] <- paste(stop_msg[[i]][[dir_ind]],"past cutoff",sep=";")
                     ## now let's try a bit harder if we came up short
                     for(dstep in c(0.2, 0.4, 0.6, 0.8, 0.9)) {
                       curval <- B0[i] + sgn * (step-1+dstep) * del * std.err[i]
@@ -199,6 +215,7 @@ setMethod("profile", "mle2",
                     }
                   } else if (length(zi) < 5) { # try smaller steps
                     if (debug) cat("try smaller steps\n")
+                    stop_msg[[i]][[dir_ind]] <- paste(stop_msg[[i]][[dir_ind]],"took more steps",sep=";")
                     mxstep <- step - 1
                     step <- 0.5
                     while ((step <- step + 1) < mxstep) {
@@ -210,8 +227,10 @@ setMethod("profile", "mle2",
               si <- order(pvi[, i])
               prof[[p.i]] <- data.frame(z = zi[si])
               prof[[p.i]]$par.vals <- pvi[si,, drop=FALSE]
-            }
-            new("profile.mle2", profile = prof, summary = summ)
+            } ## for i in which
+            newprof <- new("profile.mle2", profile = prof, summary = summ)
+            attr(newprof,"stop_msg") <- stop_msg
+            newprof
           })
 
 

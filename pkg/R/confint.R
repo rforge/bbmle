@@ -23,8 +23,13 @@ function (object, parm, level = 0.95, trace=FALSE, ...)
       tt <- approx(pro[,1],pv,xout=cutoff)$y
     } else {
       sp <- spline(x = pv, y = pro[, 1])
-      tt <- try(approx(sp$y, sp$x, xout = cutoff)$y,silent=TRUE)
-      if (inherits(tt,"try-error")) tt <- rep(NA,2)
+      if (any(diff(sp$y)<0)) {
+        warning("non-monotonic spline fit to profile: reverting from spline to linear approximation")
+        tt <- approx(pro[,1],pv,xout=cutoff)$y
+      } else {
+        tt <- try(approx(sp$y, sp$x, xout = cutoff)$y,silent=TRUE)
+        if (inherits(tt,"try-error")) tt <- rep(NA,2)
+      }
     }
     ci[Pnames[pm], ] <- tt
   }
@@ -46,7 +51,7 @@ function (object, parm, level = 0.95, method,
   if (method=="spline") {
     if (!quietly) cat("Profiling...\n")
     newpars_found <- FALSE
-    prof = try(profile(object,which=parm,tol.newmin=tol.newmin))
+    prof = try(profile(object,which=parm,tol.newmin=tol.newmin,...))
     if (inherits(prof,"try-error")) stop(paste("Problem with profiling:",prof))
     if (class(prof)=="mle2") newpars_found <- TRUE
     if (newpars_found) {
