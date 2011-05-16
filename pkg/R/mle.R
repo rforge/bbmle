@@ -262,6 +262,11 @@ mle2 <- function(minuslogl,
   }
   call$lower <- fix_order(call$lower,"lower bounds",-Inf)
   call$upper <- fix_order(call$upper,"upper bounds",Inf)
+  if (optimizer=="optimize") {
+    ## hack so that profile etc. will recognize bounds
+    call$lower <- list(...)$interval[1]
+    call$upper <- list(...)$interval[2]
+  }
   call$control$parscale <- fix_order(call$control$parscale,"parscale")
   call$control$ndeps <- fix_order(call$control$ndeps,"ndeps")
   if (is.null(call$control)) call$control <- list()
