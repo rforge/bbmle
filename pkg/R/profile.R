@@ -158,7 +158,10 @@ setMethod("profile", "mle2",
                   } else -Inf
                 ubound <- if (!missing(prof.upper)) prof.upper[i] else if (valf(upper)) upper[i] else Inf
                 stop_bound <- stop_na <- stop_cutoff <- stop_flat <- FALSE
-                while ((step <- step + 1) < maxsteps && abs(z) < zmax) {
+                while ((step <- step + 1) < maxsteps &&
+                       ## added is.na() test for try_harder case
+                       ## FIXME: add unit test!
+                       (is.na(z) || abs(z) < zmax)) {
                   curval <- B0[i] + sgn * step * del * std.err[i]
                   if ((sgn==-1 & curval<lbound) ||
                       (sgn==1 && curval>ubound)) {

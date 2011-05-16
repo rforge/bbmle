@@ -250,14 +250,14 @@ mle2 <- function(minuslogl,
   ## FIXME: use names to rearrange if present
   fix_order <- function(c1,name,default=NULL) {
       if (!is.null(c1)) {
-          if (length(c1)>1) {
-              if (is.null(names(c1))) {
-                warning(name," not named: rearranging to match 'start'")
-                oo2 <- oo
-              } else oo2 <- match(names(unlist(namedrop(c1))),names(fullcoef))
-              c1 <- c1[order(oo2)]
+          if (length(unique(c1))>1) {  ## not all the same
+            if (is.null(names(c1)) && length(unique(c1))>1) {
+              warning(name," not named: rearranging to match 'start'")
+              oo2 <- oo
+            } else oo2 <- match(names(unlist(namedrop(c1))),names(fullcoef))
+            c1 <- c1[order(oo2)]
           }
-      } else c1 <- default
+        } else c1 <- default
       c1
   }
   call$lower <- fix_order(call$lower,"lower bounds",-Inf)
