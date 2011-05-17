@@ -150,6 +150,10 @@ mle2 <- function(minuslogl,
     stop("parameter transformations not yet implemented")
   if (missing(method)) method <- mle2.options("optim.method")
   if (missing(optimizer)) optimizer <- mle2.options("optimizer")
+  L <- list(...)
+  if (optimizer=="optimize" && (is.null(L$lower) || is.null(L$upper)))
+      stop("lower and upper bounds must be specified when using
+'optimize'")
   if (inherits(minuslogl,"formula")) {
     pf <- function(f) {if (is.null(f))
                          {  ""
@@ -262,11 +266,6 @@ mle2 <- function(minuslogl,
   }
   call$lower <- fix_order(call$lower,"lower bounds",-Inf)
   call$upper <- fix_order(call$upper,"upper bounds",Inf)
-  if (optimizer=="optimize") {
-    ## hack so that profile etc. will recognize bounds
-    call$lower <- list(...)$interval[1]
-    call$upper <- list(...)$interval[2]
-  }
   call$control$parscale <- fix_order(call$control$parscale,"parscale")
   call$control$ndeps <- fix_order(call$control$ndeps,"ndeps")
   if (is.null(call$control)) call$control <- list()
@@ -388,7 +387,8 @@ mle2 <- function(minuslogl,
                    constrOptim = constrOptim(theta=start,
                      f=objectivefunction, method=method, ...),
                    optimize=,
-                   optimise= optimize(f=objectivefunction, ...),
+                   optimise= optimize(f=objectivefunction,
+                     interval=c(call$lower,call$upper), ...),
                    user = {
                      arglist <- list(...)
                      arglist$lower <- arglist$upper <-
