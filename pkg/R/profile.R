@@ -185,6 +185,7 @@ setMethod("profile", "mle2",
                     if (!try_harder) break
                   }
                   lastz <- z
+                  if (newpars_found) return(z)
                 }
                 stop_cutoff <- (!is.na(z) && abs(z)>=zmax)
                 stop_maxstep <- (step==maxsteps)
@@ -209,12 +210,14 @@ setMethod("profile", "mle2",
                       if (newpars_found) return(z)
                       if(is.na(z) || abs(z) > zmax) break
                       lastz <- z
+                      if (newpars_found) return(z)
                     }
                     if (!stop_cutoff && stop_bound) {
                       if (debug) cat("bounded and didn't make it, try at boundary\n")
                       ## bounded and didn't make it, try at boundary
-                      if (sgn==-1 && B0[i]>lbound) onestep(bi=lbound)
-                      if (sgn==1  && B0[i]<ubound) onestep(bi=ubound)
+                      if (sgn==-1 && B0[i]>lbound) z <- onestep(bi=lbound)
+                      if (sgn==1  && B0[i]<ubound) z <- onestep(bi=ubound)
+                      if (newpars_found) return(z)
                     }
                   } else if (length(zi) < 5) { # try smaller steps
                     if (debug) cat("try smaller steps\n")
@@ -222,7 +225,7 @@ setMethod("profile", "mle2",
                     mxstep <- step - 1
                     step <- 0.5
                     while ((step <- step + 1) < mxstep) {
-                      onestep(step)
+                      z <- onestep(step)
                     }
                   } ## smaller steps
                 } ## !zero stepsize
