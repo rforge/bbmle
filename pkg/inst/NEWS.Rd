@@ -4,6 +4,13 @@
 \title{bbmle News}
 \encoding{UTF-8}
 
+\section{CHANGES IN VERSION 1.0.0 (2011-06-17)}{
+  \itemize{
+    \item mainly just a version bump for CRAN
+    \item added tag for variables in profile/confint warnings
+    \item lots more technical information in vignette about profiling algorithm
+}}
+
 \section{CHANGES IN VERSION 0.9.9 (2011-05-14)}{
   \itemize{
     \item changed NEWS to NEWS.Rd
