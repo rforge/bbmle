@@ -18,13 +18,15 @@ function (object, parm, level = 0.95, trace=FALSE, ...)
     pv <- pro[,"par.vals"]
     if (is.matrix(pv)) pv <- pv[,Pnames[pm]]
     if (any(diff(pro[,1])<0)) {
-      warning("non-monotonic profile: reverting from spline to linear approximation",
-              "(consider running 'profile' with manually reduced std.err)")
+      warning(paste("non-monotonic profile (",
+                    Pnames[pm],"): reverting from spline to linear approximation ",
+              "(consider running 'profile' with manually reduced std.err)", sep=""))
       tt <- approx(pro[,1],pv,xout=cutoff)$y
     } else {
       sp <- spline(x = pv, y = pro[, 1])
       if (any(diff(sp$y)<0)) {
-        warning("non-monotonic spline fit to profile: reverting from spline to linear approximation")
+        warning(paste("non-monotonic spline fit to profile (",
+                      Pnames[pm],"): reverting from spline to linear approximation",sep=""))
         tt <- approx(pro[,1],pv,xout=cutoff)$y
       } else {
         tt <- try(approx(sp$y, sp$x, xout = cutoff)$y,silent=TRUE)

@@ -125,6 +125,7 @@ setMethod("profile", "mle2",
               zi <- 0
               pvi <- pv0
               p.i <- Pnames[i]
+              wfun <- function(txt) paste(txt," (",p.i,")",sep="")
               ## omit values from control vectors:
               ##   is this necessary/correct?
                if (!is.null(ndeps)) call$control$ndeps <- ndeps[-i]
@@ -166,14 +167,15 @@ setMethod("profile", "mle2",
                   if ((sgn==-1 & curval<lbound) ||
                       (sgn==1 && curval>ubound)) {
                     stop_bound <- TRUE;
-                    stop_msg[[i]][[dir_ind]] <- paste(stop_msg[[i]][[dir_ind]],"hit bound")
+                    stop_msg[[i]][[dir_ind]] <- paste(stop_msg[[i]][[dir_ind]],wfun("hit bound"))
                     break
                   }
                   z <- onestep(step)
                   ## experimental: DON'T STOP on flat spot or NA
                   if (step>1 && (identical(oldcurval,curval) || identical(oldz,z))) {
                     stop_flat <- TRUE
-                    stop_msg[[i]][[dir_ind]] <- paste(stop_msg[[i]][[dir_ind]],"hit flat spot",sep=";")
+                    stop_msg[[i]][[dir_ind]] <- paste(stop_msg[[i]][[dir_ind]],wfun("hit flat spot"),
+                                                      sep=";")
                     if (!try_harder) break
                   }
                   oldcurval <- curval
@@ -181,7 +183,7 @@ setMethod("profile", "mle2",
                   if (newpars_found) return(z)
                   if(is.na(z)) {
                     stop_na <- TRUE
-                    stop_msg[[i]][[dir_ind]] <- paste(stop_msg[[i]][[dir_ind]],"hit NA",sep=";")
+                    stop_msg[[i]][[dir_ind]] <- paste(stop_msg[[i]][[dir_ind]],wfun("hit NA"),sep=";")
                     if (!try_harder) break
                   }
                   lastz <- z
@@ -189,18 +191,18 @@ setMethod("profile", "mle2",
                 }
                 stop_cutoff <- (!is.na(z) && abs(z)>=zmax)
                 stop_maxstep <- (step==maxsteps)
-                if (stop_maxstep) stop_msg[[i]][[dir_ind]] <- paste(stop_msg[[i]][[dir_ind]],"max steps",sep=";")
+                if (stop_maxstep) stop_msg[[i]][[dir_ind]] <- paste(stop_msg[[i]][[dir_ind]],wfun("max steps"),sep=";")
                 if (debug) {
-                  if (stop_na) cat("encountered NA\n")
-                  if (stop_cutoff) cat("above cutoff\n")
+                  if (stop_na) cat(wfun("encountered NA"),"\n")
+                  if (stop_cutoff) cat(wfun("above cutoff"),"\n")
                 }
                 if (stop_flat) {
-                  warning("stepsize effectively zero/flat profile")
+                  warning(wfun("stepsize effectively zero/flat profile"))
                 } else {
-                  if (stop_maxstep) warning("hit maximum number of steps")
+                  if (stop_maxstep) warning(wfun("hit maximum number of steps"))
                   if(!stop_cutoff) {
-                    if (debug) cat("haven't got to zmax yet, trying harder\n")
-                    stop_msg[[i]][[dir_ind]] <- paste(stop_msg[[i]][[dir_ind]],"past cutoff",sep=";")
+                    if (debug) cat(wfun("haven't got to zmax yet, trying harder"),"\n")
+                    stop_msg[[i]][[dir_ind]] <- paste(stop_msg[[i]][[dir_ind]],wfun("past cutoff"),sep=";")
                     ## now let's try a bit harder if we came up short
                     for(dstep in c(0.2, 0.4, 0.6, 0.8, 0.9)) {
                       curval <- B0[i] + sgn * (step-1+dstep) * del * std.err[i]
@@ -213,15 +215,15 @@ setMethod("profile", "mle2",
                       if (newpars_found) return(z)
                     }
                     if (!stop_cutoff && stop_bound) {
-                      if (debug) cat("bounded and didn't make it, try at boundary\n")
+                      if (debug) cat(wfun("bounded and didn't make it, try at boundary"),"\n")
                       ## bounded and didn't make it, try at boundary
                       if (sgn==-1 && B0[i]>lbound) z <- onestep(bi=lbound)
                       if (sgn==1  && B0[i]<ubound) z <- onestep(bi=ubound)
                       if (newpars_found) return(z)
                     }
                   } else if (length(zi) < 5) { # try smaller steps
-                    if (debug) cat("try smaller steps\n")
-                    stop_msg[[i]][[dir_ind]] <- paste(stop_msg[[i]][[dir_ind]],"took more steps",sep=";")
+                    if (debug) cat(wfun("try smaller steps"),"\n")
+                    stop_msg[[i]][[dir_ind]] <- paste(stop_msg[[i]][[dir_ind]],wfun("took more steps"),sep=";")
                     mxstep <- step - 1
                     step <- 0.5
                     while ((step <- step + 1) < mxstep) {
