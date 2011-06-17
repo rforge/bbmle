@@ -4,6 +4,8 @@
 %\VignetteDepends{aod}
 %\VignetteDepends{Hmisc}
 %\VignetteDepends{emdbook}
+%\VignetteDepends{ggplot2}
+%\VignetteDepends{lattice}
 \usepackage[utf8]{inputenc} % for UTF-8/single quotes from sQuote()
 \usepackage{graphicx}
 \usepackage{natbib}
