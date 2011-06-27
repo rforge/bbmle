@@ -116,8 +116,8 @@ setMethod("profile", "mle2",
             call$minuslogl <- fitted@minuslogl
             ndeps <- eval.parent(call$control$ndeps)
             parscale <- eval.parent(call$control$parscale)
-            upper <- eval.parent(call$upper)
-            lower <- eval.parent(call$lower)
+            upper <- unlist(eval.parent(call$upper))
+            lower <- unlist(eval.parent(call$lower))
             ## cat("upper\n")
             ## print(upper)
             stop_msg <- list()

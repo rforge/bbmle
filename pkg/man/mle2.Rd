@@ -21,7 +21,7 @@ browse_obj=FALSE,
 transform=NULL,
 gr,
 optimfun,\dots)
-calc_mle2_function(formula,parameters,start,
+calc_mle2_function(formula,parameters, links, start,
    parnames, use.deriv=FALSE, data=NULL,trace=FALSE)
 }
 \arguments{
@@ -54,6 +54,7 @@ calc_mle2_function(formula,parameters,start,
     \emph{MUST BE SPECIFIED IN THE SAME ORDER as the start vector
       (this is a bug/restriction that I hope to fix soon, but in
       the meantime beware)}}
+  \item{links}{(unimplemented) specify transformations of parameters}
   \item{parnames}{List (or vector?) of parameter names}
   \item{gr}{gradient function}
   \item{\dots}{Further arguments to pass to optimizer}

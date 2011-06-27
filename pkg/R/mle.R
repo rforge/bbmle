@@ -10,6 +10,7 @@ call.to.char <- function(x) {
 
 calc_mle2_function <- function(formula,
                                parameters,
+                               links,
                                start,
                                parnames,
                                use.deriv=FALSE,
@@ -23,17 +24,18 @@ calc_mle2_function <- function(formula,
   ## need to check on variable order:
   ## should it go according to function/formula,
   ##   not start?
-  ## BUG/FIXME: data evaluates to 'FALSE' at this point -- regardless of whether
-  ## it has been specified
-  if (!is.list(data)) stop("must specify data argument (as a list or data frame) when using formula argument")
+  if (!is.list(data)) stop("must specify data argument",
+                           "(as a list or data frame)",
+                           "when using formula argument")
   vecstart <- (is.numeric(start))
-  if (vecstart) start <- as.list(start) ## ??
+  if (vecstart) start <- as.list(start) ## expand to a list
   if (missing(parnames) || is.null(parnames)) {
     parnames <- as.list(names(start))
     names(parnames) <- names(start)
   }
   ## hack
   if (!missing(parameters)) {
+    ## linear model specified for some parameters
     vars <- as.character(sapply(parameters,"[[",2))
     if (length(parameters)>1) {
       models <-  sapply(parameters,function(z) call.to.char(z[[3]]))
@@ -74,8 +76,13 @@ calc_mle2_function <- function(formula,
       }
     }
   } else parameters <- vars <- mmats <- vpos <- NULL
+  if (!missing(links)) {
+    stop("parameter link functions not yet implemented")
+    for (i in length(links)) {
+    }
+  }
   parnames <- unlist(parnames)
-  start <- as.list(unlist(start)) ## collapse/re-expand
+  start <- as.list(unlist(start)) ## collapse/re-expand (WHY?)
   names(start) <- parnames
   arglist <- as.list(RHS[-1]) ## delete function name
   arglist$parameters <- NULL
@@ -96,7 +103,7 @@ calc_mle2_function <- function(formula,
     arglist2 <- lapply(arglist1,eval,envir=data,enclos=sys.frame(sys.nframe()))
     if (use.deriv) {
       stop("use.deriv is not yet implemented")
-      browser()
+      ## browser()
       ## minor hack -- should store information otherwise -- could have
       ##  different numbers of arguments for different distributions?
       LLform <- get(gsub("^d","s",as.character(RHS[[1]])))(NA,NA)$formula
@@ -115,6 +122,9 @@ calc_mle2_function <- function(formula,
   npars <- length(parnames)
   flist <-  vector("list",npars)
   names(flist) <- parnames
+  ## add additional parnames?
+  ## browser()
+  ## flist <- c(flist,setdiff(names(arglist),c("x","log",... ?))
   formals(fn) <- flist
   if (vecstart) start <- unlist(start)
   list(fn=fn,start=start,parameters=parameters,

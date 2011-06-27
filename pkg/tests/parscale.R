@@ -15,7 +15,7 @@ if (FALSE) {
             start = list(rate = 0.01),
             method = "L-BFGS-B",
             control = list(trace = 1, parscale = 1e-4),
-            lower = list(rate = 1e-9))
+            lower = c(rate = 1e-9))
 
   profile(m, std.err=0.0001) ## finds new optimum
 
@@ -27,7 +27,7 @@ if (FALSE) {
             start = list(rate = 100),
             method = "L-BFGS-B",
             control = list(trace = 1),
-            lower = list(rate = 1e-5))
+            lower = c(rate = 1e-5))
 
   ## does it work if we scale by hand?
   ##   no, identical problem
@@ -39,7 +39,7 @@ m <- mle2(minuslogl = f,
           start = list(rate = 0.001),
           method = "L-BFGS-B",
           control = list(trace = 1,parscale=1e-4),
-              lower = list(rate = 1e-9))
+              lower = c(rate = 1e-9))
 vcov(m)
 confint(m)
 
