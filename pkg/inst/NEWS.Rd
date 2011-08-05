@@ -4,10 +4,14 @@
 \title{bbmle News}
 \encoding{UTF-8}
 
-\section{CHANGES IN VERSION 1.0.1 (2011-08-11)}{
-  Turned off some warnings when skip.hessian=TRUE (e.g. in profile)
-  Calculate max grad and Hessian eigenval ratio, add to "details"
-  (Should add accessor methods)
+\section{CHANGES IN VERSION 1.0.1 (2011-08-04)}{
+  \itemize{
+    \item Turned off some warnings when skip.hessian=TRUE (e.g. in profile)
+    \item Calculate max grad and Hessian eigenval ratio, add to "details"
+    \item (Should add accessor methods)
+    \item Fixed NAMESPACE to export methods etc etc properly; removed
+  universal exportPattern directive
+  }
 }
 \section{CHANGES IN VERSION 1.0.0 (2011-06-17)}{
   \itemize{
