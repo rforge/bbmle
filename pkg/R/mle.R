@@ -42,6 +42,7 @@ calc_mle2_function <- function(formula,
     } else {
       models <- as.character(parameters)
     }
+    models <- gsub(" ","",models)
     parameters <- parameters[models!="1"]
     npars <- length(parameters)
     if (npars==0) { ## no non-constant parameters
@@ -63,7 +64,7 @@ calc_mle2_function <- function(formula,
         vposvals <- cumsum(sapply(parnames,length))
         ## fill out start vectors with zeros or replicates as appropriate
         if (length(start[[vname]])==1) {
-            if (length(grep("- 1",models[i])>0)) {
+            if (length(grep("-1",models[i])>0)) {
                 start[[vname]] <- rep(start[[vname]],length(pnames))
             } else {
                 start[[vname]] <- c(start[[vname]],rep(0,length(pnames)-1))
