@@ -206,9 +206,11 @@ mle2 <- function(minuslogl,
   call$data <- eval.parent(call$data)
   call$upper <- eval.parent(call$upper)
   call$lower <- eval.parent(call$lower)
-  call$control$parscale <- eval.parent(call$control$parscale)
-  call$control$ndeps <- eval.parent(call$control$ndeps)
-  call$control$maxit <- eval.parent(call$control$maxit)
+  ## FIX based on request from Mark Clements
+  ## call$control$parscale <- eval.parent(call$control$parscale)
+  ## call$control$ndeps <- eval.parent(call$control$ndeps)
+  ## call$control$maxit <- eval.parent(call$control$maxit)
+  call$control <- eval.parent(call$control)
   if(!missing(start))
     if (!is.list(start)) {
       if (is.null(names(start)) || !is.vector(start))
