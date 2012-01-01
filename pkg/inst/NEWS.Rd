@@ -6,8 +6,7 @@
 
 \section{CHANGES IN VERSION 1.0.4}{
   \itemize{
-    \item 
-
+    \item fix imports for latest version of R-devel
   }
 }
 \section{CHANGES IN VERSION 1.0.3}{
