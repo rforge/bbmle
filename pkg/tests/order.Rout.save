@@ -18,10 +18,6 @@ Type 'demo()' for some demos, 'help()' for on-line help, or
 'help.start()' for an HTML browser interface to help.
 Type 'q()' to quit R.
 
-[Previously saved workspace restored]
-
-During startup - Warning message:
-Functions for exporting methods must have been made generic, explicitly or implicitly; not true when loading ‘bbmle’ for ‘AIC’, ‘plot’, ‘update’ 
 > set.seed(1001)
 > x <- runif(10)
 > y <- 1000+x+rnorm(10,sd=0.1)
@@ -63,4 +59,4 @@ Warning messages:
 > 
 > proc.time()
    user  system elapsed 
-  1.024   0.960   1.866 
+  0.948   0.956   1.789 

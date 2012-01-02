@@ -18,16 +18,12 @@ Type 'demo()' for some demos, 'help()' for on-line help, or
 'help.start()' for an HTML browser interface to help.
 Type 'q()' to quit R.
 
-[Previously saved workspace restored]
-
 > require(bbmle)
 Loading required package: bbmle
 Loading required package: stats4
 Loading required package: numDeriv
 Loading required package: lattice
 Loading required package: MASS
-Warning message:
-Functions for exporting methods must have been made generic, explicitly or implicitly; not true when loading ‘bbmle’ for ‘AIC’, ‘plot’, ‘update’ 
 > x <- 0:10
 > y <- c(26, 17, 13, 12, 20, 5, 9, 8, 5, 4, 8)
 > d <- data.frame(x,y)
@@ -42,4 +38,4 @@ Functions for exporting methods must have been made generic, explicitly or impli
 > 
 > proc.time()
    user  system elapsed 
-  0.768   0.912   1.559 
+  0.688   0.956   1.496 

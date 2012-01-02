@@ -18,10 +18,6 @@ Type 'demo()' for some demos, 'help()' for on-line help, or
 'help.start()' for an HTML browser interface to help.
 Type 'q()' to quit R.
 
-[Previously saved workspace restored]
-
-During startup - Warning message:
-Functions for exporting methods must have been made generic, explicitly or implicitly; not true when loading ‘bbmle’ for ‘AIC’, ‘plot’, ‘update’ 
 > ## I am experiencing difficulties with one of my modeling function (bbmle::mle2)
 > ## which, like other modeling functions in R, uses match.call() to
 > ## retrieve and save the original function call for future use.
@@ -119,4 +115,4 @@ Error in lm.fit(x, y, offset = offset, singular.ok = singular.ok, ...) :
 > 
 > proc.time()
    user  system elapsed 
-  0.752   0.948   1.546 
+  0.728   1.012   1.597 

@@ -18,10 +18,6 @@ Type 'demo()' for some demos, 'help()' for on-line help, or
 'help.start()' for an HTML browser interface to help.
 Type 'q()' to quit R.
 
-[Previously saved workspace restored]
-
-During startup - Warning message:
-Functions for exporting methods must have been made generic, explicitly or implicitly; not true when loading ‘bbmle’ for ‘AIC’, ‘plot’, ‘update’ 
 > ## implement richards-incidence (="revised superlogistic")
 > ##  with analytic gradients
 > 
@@ -130,7 +126,11 @@ Warning messages:
 There were 50 or more warnings (use warnings() to see the first 50)
 > par(mfrow=c(1,2))
 > plot(pp1,show.points=TRUE)
-Error in as.double(y) : 
-  cannot coerce type 'S4' to vector of type 'double'
-Calls: plot -> plot -> plot.default -> xy.coords
-Execution halted
+> plot(pp0,show.points=TRUE)
+Warning message:
+In .local(x, ...) :
+  non-monotonic profile: reverting to linear interpolation.  Consider setting std.err manually
+> 
+> proc.time()
+   user  system elapsed 
+  6.732   1.024   7.687 
