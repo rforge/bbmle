@@ -34,34 +34,35 @@ Loading required package: MASS
 +     -sum(stats::dpois(y, lambda=ymax/(1+x/xhalf), log=TRUE))
 > mfit0 <- mle2(y~dpois(lambda=exp(interc)),
 +               start=list(interc=log(mean(y))),data=d)
-> 
 > mfit1 <- mle2(y~dpois(lambda=exp(loglambda)),
 +               start=list(loglambda=log(mean(y))),data=d)
->               
-> gfit0 <- glm(y~1,family=poisson)
-> coef(mfit0)-coef(gfit0)
-       interc 
--2.709339e-10 
-> logLik(mfit0)-logLik(gfit0)
-'log Lik.' 7.105427e-15 (df=1)
-> predict(gfit0,type="response")
-       1        2        3        4        5        6        7        8 
-11.54545 11.54545 11.54545 11.54545 11.54545 11.54545 11.54545 11.54545 
-       9       10       11 
-11.54545 11.54545 11.54545 
-> predict(mfit0)  ## why only one value??
-[1] 11.54545
-> ## FIXME: residuals are backwards
+> 
+> coef(mfit0)
+  interc 
+2.446292 
 > residuals(mfit0)
  [1]  4.2540141  1.6052883  0.4280769  0.1337740  2.4881969 -1.9263460
  [7] -0.7491346 -1.0434374 -1.9263460 -2.2206488 -1.0434374
-> residuals(gfit0,type="response")
-         1          2          3          4          5          6          7 
-14.4545455  5.4545455  1.4545455  0.4545455  8.4545455 -6.5454545 -2.5454545 
-         8          9         10         11 
--3.5454545 -6.5454545 -7.5454545 -3.5454545 
-> 
+> AIC(mfit0)
+[1] 87.45356
+> BIC(mfit0)
+[1] 87.85146
+> vcov(mfit0)
+            interc
+interc 0.007874016
+> ## fitted(mfit0)  ## fails, looks for default value
+> predict(mfit0)  ## FIXME: doesn't expand properly (need implicit lambda~1 formula??)
+[1] 11.54545
+> simulate(mfit0)
+ [1]  7 15 10  5  7 15 18 11 12  7  9
+> anova(mfit0,mfit1)
+Likelihood Ratio Tests
+Model 1: mfit0, y~dpois(lambda=exp(interc))
+Model 2: mfit1, y~dpois(lambda=exp(loglambda))
+  Tot Df Deviance Chisq Df Pr(>Chisq)
+1      1   85.454                    
+2      1   85.454     0  0          1
 > 
 > proc.time()
    user  system elapsed 
-  0.772   0.956   1.579 
+  0.760   1.112   1.722 

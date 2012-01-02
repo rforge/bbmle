@@ -22,40 +22,26 @@ Type 'q()' to quit R.
 
 During startup - Warning message:
 Functions for exporting methods must have been made generic, explicitly or implicitly; not true when loading ‘bbmle’ for ‘AIC’, ‘plot’, ‘update’ 
-> ## set up a data frame for prediction
-> 
-> set.seed(1001)
-> f = factor(rep(letters[1:4],each=20))
-> x = runif(80)
-> u = rnorm(4)
-> y = rnorm(80,mean=2+x*(3+u[f]),sd=0.1)
-> dat = data.frame(f,x,y)
-> 
-> ## fit a model ... could easily do by lm() but want to
-> ##   demonstrate the problem
-> 
 > library(bbmle)
 Loading required package: stats4
 Loading required package: numDeriv
 Loading required package: lattice
 Loading required package: MASS
-> m1 = mle2(y~dnorm(a+b*x,sd=exp(logs)),parameters=list(b~f),data=dat,
-+   start=list(a=0,b=2,logs=-3))
 > 
-> ## data frame for prediction
-> pp0 = expand.grid(x=seq(0,1,length=11),
-+   f=levels(dat$f))
+> x <- 0:10
+> y <- c(26, 17, 13, 12, 20, 5, 9, 8, 5, 4, 8)
+> d <- data.frame(x,y)
+> m1 <- mle2(y~dpois(lambda=ymax/(1+x/xhalf)),
++            start=list(ymax=1,xhalf=1),data=d)
+Warning messages:
+1: In dpois(x, lambda, log) : NaNs produced
+2: In dpois(x, lambda, log) : NaNs produced
 > 
-> ## combine frame and model data: have to keep the model data
-> ##  around, because it contain other information needed for
-> ##  prediction.
+> y2 <- c(26, 17, 10, 15, 20, 5, 9, 8, 5, 4, 8)
+> d2 <- data.frame(x,y=y2)
 > 
-> nrow(predict(m1,pp0))
-[1] 44
+> m2 <- update(m1,data=d2)
 > 
-> 
-> 
-> 
-> proc.time()
-   user  system elapsed 
-  1.160   0.924   1.931 
+> m3 <- update(m1,.~dpois(lambda=c),start=list(c=5))
+Error: $ operator not defined for this S4 class
+Execution halted

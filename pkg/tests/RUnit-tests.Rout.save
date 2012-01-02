@@ -22,40 +22,15 @@ Type 'q()' to quit R.
 
 During startup - Warning message:
 Functions for exporting methods must have been made generic, explicitly or implicitly; not true when loading ‘bbmle’ for ‘AIC’, ‘plot’, ‘update’ 
-> ## set up a data frame for prediction
+> require(RUnit)
+Loading required package: RUnit
+> ## TODO -- find solution to run these tests on R-forge
 > 
-> set.seed(1001)
-> f = factor(rep(letters[1:4],each=20))
-> x = runif(80)
-> u = rnorm(4)
-> y = rnorm(80,mean=2+x*(3+u[f]),sd=0.1)
-> dat = data.frame(f,x,y)
-> 
-> ## fit a model ... could easily do by lm() but want to
-> ##   demonstrate the problem
-> 
-> library(bbmle)
-Loading required package: stats4
-Loading required package: numDeriv
-Loading required package: lattice
-Loading required package: MASS
-> m1 = mle2(y~dnorm(a+b*x,sd=exp(logs)),parameters=list(b~f),data=dat,
-+   start=list(a=0,b=2,logs=-3))
-> 
-> ## data frame for prediction
-> pp0 = expand.grid(x=seq(0,1,length=11),
-+   f=levels(dat$f))
-> 
-> ## combine frame and model data: have to keep the model data
-> ##  around, because it contain other information needed for
-> ##  prediction.
-> 
-> nrow(predict(m1,pp0))
-[1] 44
-> 
-> 
-> 
+> ##testsuite <- defineTestSuite("phylobase", dirs="/home/francois/Work/R-dev/phylobase/branches/fm-branch/RUnit-tests",
+> ##                             testFileRegexp="^test", testFuncRegexp="^test")
+> ##testRslt <- runTestSuite(testsuite)
+> ##printTextProtocol(testRslt)
 > 
 > proc.time()
    user  system elapsed 
-  1.160   0.924   1.931 
+  0.524   0.556   0.936 

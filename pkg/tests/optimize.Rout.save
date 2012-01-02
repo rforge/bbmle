@@ -22,40 +22,33 @@ Type 'q()' to quit R.
 
 During startup - Warning message:
 Functions for exporting methods must have been made generic, explicitly or implicitly; not true when loading ‘bbmle’ for ‘AIC’, ‘plot’, ‘update’ 
-> ## set up a data frame for prediction
+> ## try to reconstruct error reported by Hofert Jan Marius
+> ## (simpler version)
 > 
-> set.seed(1001)
-> f = factor(rep(letters[1:4],each=20))
-> x = runif(80)
-> u = rnorm(4)
-> y = rnorm(80,mean=2+x*(3+u[f]),sd=0.1)
-> dat = data.frame(f,x,y)
+> Lfun <- function(x) {
++   (x-5)^2
++ }
 > 
-> ## fit a model ... could easily do by lm() but want to
-> ##   demonstrate the problem
+> 
 > 
 > library(bbmle)
 Loading required package: stats4
 Loading required package: numDeriv
 Loading required package: lattice
 Loading required package: MASS
-> m1 = mle2(y~dnorm(a+b*x,sd=exp(logs)),parameters=list(b~f),data=dat,
-+   start=list(a=0,b=2,logs=-3))
 > 
-> ## data frame for prediction
-> pp0 = expand.grid(x=seq(0,1,length=11),
-+   f=levels(dat$f))
-> 
-> ## combine frame and model data: have to keep the model data
-> ##  around, because it contain other information needed for
-> ##  prediction.
-> 
-> nrow(predict(m1,pp0))
-[1] 44
-> 
-> 
-> 
-> 
-> proc.time()
-   user  system elapsed 
-  1.160   0.924   1.931 
+> lb <- 6
+> ## first try with L-BFGS-B and bounds
+> m1 <- mle2(Lfun,start=list(x=7),lower=6,method="L-BFGS-B")
+Warning message:
+In mle2(Lfun, start = list(x = 7), lower = 6, method = "L-BFGS-B") :
+  some parameters are on the boundary: variance-covariance calculations based on Hessian may be unreliable
+> coef(m1)
+x 
+6 
+> p1 <- profile(m1)
+> plot(p1)
+Error in as.double(y) : 
+  cannot coerce type 'S4' to vector of type 'double'
+Calls: plot -> plot -> plot.default -> xy.coords
+Execution halted
