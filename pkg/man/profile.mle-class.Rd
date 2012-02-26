@@ -139,6 +139,13 @@ plot(p2,show.points=TRUE)
 ## but the fit for ymax is just bad enough that the spline gets wonky
 confint(p2)  ## now we get a warning
 confint(fit2,method="uniroot")
+## bobyqa is a better-behaved bounded optimizer ...
+if (require(optimx)) {
+  fit3 <- update(fit1,
+      optimizer="optimx",
+      method="bobyqa",lower=c(ymax=0.001,xhalf=0.001))
+  p3 <- profile(fit3)
+  plot(p3,show.points=TRUE)
+  confint(p3)
 }
-
 \keyword{classes}

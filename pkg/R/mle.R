@@ -452,9 +452,12 @@ mle2 <- function(minuslogl,
     oout$par <- oout$minimum
     oout$convergence <- 0 ## can't detect non-convergence
   }
-  if (optimizer %in% c("nlminb","optimise","optimize")) {
+  if (optimizer %in% c("nlminb","optimise","optimize") ||
+      ## optimizer (bobyqa?) may have stripped names -- try to restore them!
+      is.null(names(oout$par))) {
     names(oout$par) <- names(start)
   }
+
   ## FIXME: worry about boundary violations?
   ## (if we're on the boundary then the Hessian may not be useful anyway)
   ##

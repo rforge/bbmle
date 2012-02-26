@@ -171,7 +171,7 @@ setMethod("profile", "mle2",
                     break
                   }
                   z <- onestep(step)
-                  ## experimental: DON'T STOP on flat spot or NA
+                  ## stop on flat spot, unless try_harder
                   if (step>1 && (identical(oldcurval,curval) || identical(oldz,z))) {
                     stop_flat <- TRUE
                     stop_msg[[i]][[dir_ind]] <- paste(stop_msg[[i]][[dir_ind]],wfun("hit flat spot"),

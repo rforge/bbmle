@@ -9,6 +9,7 @@
     Kaschek)
     \item improve (and document) uniroot method for confint: now
     respects box constraints
+    \item fix issue where bobyqa (optimx) strips parameter names from result
   }
 }
 \section{CHANGES IN VERSION 1.0.4.1 (2012-01-27)}{

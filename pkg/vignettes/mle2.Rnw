@@ -656,12 +656,12 @@ In each direction (decreasing and increasing from the MLE for the focal paramete
   evaluate $z$
 \item{Stop the profiling: 
     \begin{itemize}
-    \item if $z$ doesn't change from the previous step (\verb+stop_flat+)
+    \item if $z$ doesn't change from the previous step (\verb+stop_flat+) %
+      --- unless \verb+try_harder+ is \code{TRUE}
     \item * stop if $z$ is less than \code{tol.newmin} (default: 0.001) units 
       \emph{better} than the MLE fit, i.e. $z<-\mbox{\code{tol.newmin}}$
       (if $-\mbox{\code{tol.newmin}}<z<0$, set $z$ to zero) (\verb+newpars_found+)
-    \item if $z$ is \code{NA} (\verb+stop_na+) \bbnote{(for greater robustness, should
-        we try to keep going anyway?)}
+    \item if $z$ is \code{NA} (\verb+stop_na+)  --- unless \verb+try_harder+ is \code{TRUE}
     \item if $z$ is beyond \code{zmax} (i.e., we have reached our goal: \verb+stop_cutoff+)
     \item if \code{step==maxsteps}
     \item if the focal parameter has hit its upper/lower bound (\verb+stop_bound+)
@@ -773,7 +773,8 @@ values designated by \code{conf} (default: $\{0.99,0.95,0.9,0.8,0.5\}$).
   better methods for extracting \code{nobs} information
   when possible (e.g. with formula interface)
 \item \textbf{WISH}: better documentation, especially for S4 methods
-\item \textbf{WISH}: variable-length chunks in argument list
+\item \textbf{WISH}: variable-length (and shaped) chunks in argument list -- cleaner division
+  between linear model specs/list of arguments/vector equivalent
 \item \textbf{WISH}: limited automatic differentiation
   (add capability for common distributions)
 \item \textbf{WISH}: store \code{objectivefunction}
@@ -788,7 +789,8 @@ values designated by \code{conf} (default: $\{0.99,0.95,0.9,0.8,0.5\}$).
 \item \textbf{WISH}: add in/document/demonstrate ``slice'' capabilities
 \item \textbf{WISH}: refactor profiling to use stored objective functions
   rather than re-calling \code{mle2} with \code{fixed} values mucked around
-  with in the calls???
+  with in the calls???  Strip out and make generic for vectorized objective function?
+  (\code{profileModel} package only works for glm-like objects, with a linear predictor)
 \end{itemize}
 
 \bibliography{mle2}
