@@ -3,8 +3,20 @@
 \name{NEWS}
 \title{bbmle News}
 \encoding{UTF-8}
-
-\section{CHANGES IN VERSION 1.0.4}{
+\section{CHANGES IN VERSION 1.0.4.2 (2012-02-25)}{
+  \itemize{
+    \item fix bug in gradient/vecpar/profiling interaction (Daniel
+    Kaschek)
+    \item improve (and document) uniroot method for confint: now
+    respects box constraints
+  }
+}
+\section{CHANGES IN VERSION 1.0.4.1 (2012-01-27)}{
+  \itemize{
+    \item remove a bit of installed junk; vignette fix
+  }
+}
+\section{CHANGES IN VERSION 1.0.4 (2012-01-02)}{
   \itemize{
     \item fix imports for latest version of R-devel
   }

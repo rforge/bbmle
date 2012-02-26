@@ -296,6 +296,7 @@ mle2 <- function(minuslogl,
     l <- relist2(p,template) ## redo list structure
     ## if (named)
     names(p) <- nstart[order(oo)] ## make sure to reorder
+    ## ??? useless, comes after l is constructed ???
     l[nfix] <- fixed
     ##    cat("p\n"); print(p)
     ## cat("l\n"); print(l)
@@ -316,7 +317,8 @@ mle2 <- function(minuslogl,
   } ## end of objective function
   objectivefunctiongr <-
     if (missing(gr)) NULL else
-        function(p){
+        function(p) {
+          if (browse_obj) browser()
           l <- relist2(p,template) ## redo list structure
           names(p) <- nstart[order(oo)] ## make sure to reorder
           l[nfix] <- fixed
@@ -328,13 +330,15 @@ mle2 <- function(minuslogl,
           } else { args <- c(l,args.in.data)
                  }
           v <- do.call("gr",args)
-          if (length(v)==length(p)) {
-            ## already adjusted for length
-            names(v) <- names(p)
-          } else {
-            if (is.null(names(v))) {
-              names(v) <- names(formals(minuslogl))
-            }
+          if (is.null(names(v))) {
+            if (length(v)==length(p) && !is.null(tt <- names(p))) {
+              vnames <- tt
+            } else if (!is.null(tt <- parnames(minuslogl))) {
+              vnames <- tt
+            } else vnames <- names(formals(minuslogl))
+            if (length(vnames)!=length(v))
+              stop("name/length mismatch in gradient function")
+            names(v) <- vnames
           }
           v[!names(v) %in% nfix] ## from Eric Weese
         } ## end of gradient function
@@ -513,9 +517,8 @@ mle2 <- function(minuslogl,
     }
   }
   m <- new("mle2", call=call, call.orig=call.orig, coef=coef, fullcoef=unlist(fullcoef), vcov=tvcov,
-      min=min, details=oout, minuslogl=minuslogl, method=method,
-    optimizer=optimizer,
-      data=as.list(data),formula=formula)
+           min=min, details=oout, minuslogl=minuslogl, method=method,
+           optimizer=optimizer,data=as.list(data),formula=formula)
   attr(m,"df") = length(m@coef)
   if (!missing(data)) attr(m,"nobs") = length(data[[1]])
   ## to work with BIC as well
