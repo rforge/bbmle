@@ -3,6 +3,19 @@
 \name{NEWS}
 \title{bbmle News}
 \encoding{UTF-8}
+\section{CHANGES IN VERSION 1.0.5 (2012-05-15)}{
+  \itemize{
+    \item add \code{exclude.fixed} argument to \code{coef} method
+    \item fix bug: single lower/upper parameter, or
+    prof.lower/prof.upper parameter, not interpreted properly in
+    profile/confint
+    \item add and document \code{slice} methods: change from old
+    (profile-like) behavior, old version is available as \code{sliceOld}
+    \item DESCRIPTION/NAMESPACE fixes, move most Depends: to Imports:
+    instead (except methods package)
+  }
+}
+
 \section{CHANGES IN VERSION 1.0.4.2 (2012-02-25)}{
   \itemize{
     \item fix bug in gradient/vecpar/profiling interaction (Daniel

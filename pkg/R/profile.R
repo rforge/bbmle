@@ -124,8 +124,18 @@ setMethod("profile", "mle2",
             call$minuslogl <- fitted@minuslogl
             ndeps <- eval.parent(call$control$ndeps)
             parscale <- eval.parent(call$control$parscale)
-            upper <- unlist(eval.parent(call$upper))
-            lower <- unlist(eval.parent(call$lower))
+            nc <- length(fitted@coef)
+            xf <- function(x) rep(x,length.out=nc) ## expand to length
+            upper <- xf(unlist(eval.parent(call$upper)))
+            lower <- xf(unlist(eval.parent(call$lower)))
+            if (all(upper==Inf & lower==-Inf)) {
+                lower <- upper <- NULL
+                ## kluge: lower/upper may have been set to +/- Inf
+                ##   in previous rounds, 
+                ##  but we don't want them in that case
+            }
+            if (!missing(prof.lower)) prof.lower <- xf(prof.lower)
+            if (!missing(prof.upper)) prof.upper <- xf(prof.upper)
             ## cat("upper\n")
             ## print(upper)
             stop_msg <- list()

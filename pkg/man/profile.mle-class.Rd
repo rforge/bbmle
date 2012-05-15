@@ -112,8 +112,6 @@
   spline (which by default has three times as many points as were in
   the original set of profile points).  It then uses linear
   interpolation between these interpolated points (!)
-  
-
 }
 \examples{
 x <- 0:10
@@ -147,5 +145,6 @@ if (require(optimx)) {
   p3 <- profile(fit3)
   plot(p3,show.points=TRUE)
   confint(p3)
+}
 }
 \keyword{classes}
