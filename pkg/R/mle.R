@@ -26,8 +26,8 @@ calc_mle2_function <- function(formula,
   ## should it go according to function/formula,
   ##   not start?
   if (!is.list(data)) stop("must specify data argument",
-                           "(as a list or data frame)",
-                           "when using formula argument")
+                           " (as a list or data frame)",
+                           " when using formula argument")
   vecstart <- (is.numeric(start))
   if (vecstart) start <- as.list(start) ## expand to a list
   if (missing(parnames) || is.null(parnames)) {
@@ -487,7 +487,7 @@ mle2 <- function(minuslogl,
     }
   }
   if (skip.hessian || inherits(oout$hessian,"try-error"))
-    oout$hessian <- namatrix
+      oout$hessian <- namatrix
   coef <- oout$par
   nc <- names(coef)
   if (skip.hessian) {
@@ -495,7 +495,7 @@ mle2 <- function(minuslogl,
   } else {
     if (length(coef)) {
       if (use.ginv) {
-        tmphess <- try(MASS::ginv(oout$hessian))
+        tmphess <- try(MASS::ginv(oout$hessian),silent=TRUE)
       } else {
         tmphess <- try(solve(oout$hessian,silent=TRUE))
       }
@@ -522,8 +522,9 @@ mle2 <- function(minuslogl,
     }
     oout$maxgrad <-  max(abs(gradvec))
     if (!skip.hessian) {
-      ev <- eigen(oout$hessian)$value
-      oout$eratio <- min(ev)/max(ev)
+        if (inherits(ev <- try(eigen(oout$hessian)$value,silent=TRUE),
+                     "try-error")) ev <- NA
+        oout$eratio <- min(ev)/max(ev)
     }
   }
   m <- new("mle2", call=call, call.orig=call.orig, coef=coef, fullcoef=unlist(fullcoef), vcov=tvcov,

@@ -3,8 +3,17 @@
 \name{NEWS}
 \title{bbmle News}
 \encoding{UTF-8}
+\section{CHANGES IN VERSION 1.0.5.1 (2012-07-17)}{
+  \itemize{
+     \item remove spurious .RData file; version bump
+   }
+}
+
 \section{CHANGES IN VERSION 1.0.5 (2012-05-15)}{
   \itemize{
+    \item wrapped eigen() call to prevent failure of eigenvalue ratio
+    summary when hessian is bad
+    \item fix bug: forgot to export summary method for mle2
     \item add \code{exclude.fixed} argument to \code{coef} method
     \item fix bug: single lower/upper parameter, or
     prof.lower/prof.upper parameter, not interpreted properly in
