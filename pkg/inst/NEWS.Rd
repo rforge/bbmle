@@ -3,6 +3,13 @@
 \name{NEWS}
 \title{bbmle News}
 \encoding{UTF-8}
+\section{CHANGES IN VERSION 1.0.5.2 (2012-07-29)}{
+  \itemize{
+     \item remove much of BIC stuff (now unnecessary?)
+     \item add explicit Depends: on stats4 
+   }
+}
+
 \section{CHANGES IN VERSION 1.0.5.1 (2012-07-17)}{
   \itemize{
      \item remove spurious .RData file; version bump
