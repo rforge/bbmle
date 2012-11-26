@@ -338,14 +338,19 @@ mle2 <- function(minuslogl,
                  }
           v <- do.call("gr",args)
           if (is.null(names(v))) {
-            if (length(v)==length(p) && !is.null(tt <- names(p))) {
-              vnames <- tt
-            } else if (!is.null(tt <- parnames(minuslogl))) {
-              vnames <- tt
-            } else vnames <- names(formals(minuslogl))
-            if (length(vnames)!=length(v))
-              stop("name/length mismatch in gradient function")
-            names(v) <- vnames
+              if (length(v)==length(l) && !is.null(tt <- names(l))) {
+                  ## try to set names from template
+                  vnames <- tt
+              } else if (length(v)==length(p) && !is.null(tt <- names(p))) {
+                  ## try to set names from params
+                  vnames <- tt
+              } else if (!is.null(tt <- parnames(minuslogl))) {
+                  ## names were set as an attribute of the function
+                  vnames <- tt
+              } else vnames <- names(formals(minuslogl))
+              if (length(vnames)!=length(v))
+                  stop("name/length mismatch in gradient function")
+              names(v) <- vnames
           }
           v[!names(v) %in% nfix] ## from Eric Weese
         } ## end of gradient function
@@ -359,8 +364,9 @@ mle2 <- function(minuslogl,
              MoreArgs=list(envir=newenv))
       environment(minuslogl) <- newenv
       if (!missing(gr)) {
+          newenvgr <- new.env(hash=TRUE,parent=environment(minuslogl))
           mapply(assign,names(d),d,
-                 MoreArgs=list(envir=environment(gr)))
+                 MoreArgs=list(envir=newenvgr))
       }
   }
   if (length(start)==0 || eval.only) {
@@ -516,9 +522,10 @@ mle2 <- function(minuslogl,
   ## FIXME: should we worry about parscale here??
   if (length(coef)) {
     gradvec <- if (!missing(gr)) {
-      objectivefunctiongr(coef)
+        objectivefunctiongr(coef)
     } else {
-      grad(objectivefunction,coef)
+        if (inherits(tt <- try(grad(objectivefunction,coef),silent=TRUE),
+                     "try-error")) NA else tt
     }
     oout$maxgrad <-  max(abs(gradvec))
     if (!skip.hessian) {

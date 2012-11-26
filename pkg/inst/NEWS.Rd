@@ -3,6 +3,20 @@
 \name{NEWS}
 \title{bbmle News}
 \encoding{UTF-8}
+
+\section{CHANGES IN VERSION 1.0.6 }{
+  \itemize{
+     \item fixed (fairly obscure) bug in assigning data environment to
+  gradient function
+   }
+}
+
+\section{CHANGES IN VERSION 1.0.5.3 (2012-09-05)}{
+  \itemize{
+     \item changed some cat() to message()
+   }
+}
+
 \section{CHANGES IN VERSION 1.0.5.2 (2012-07-29)}{
   \itemize{
      \item remove BIC definitions (now unnecessary/should be adequately
