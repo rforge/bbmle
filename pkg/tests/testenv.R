@@ -11,4 +11,5 @@ f <- function() {
 }
 
 m1 <- f()
-profile(m1)
+p <- profile(m1)
+## FIXME: check results (need to save in an environment-friendly way!)
