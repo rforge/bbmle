@@ -13,3 +13,4 @@ f <- function() {
 m1 <- f()
 p <- profile(m1)
 ## FIXME: check results (need to save in an environment-friendly way!)
+print(head(as.data.frame(p)),digits=3)
