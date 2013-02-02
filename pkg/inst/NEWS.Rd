@@ -4,6 +4,12 @@
 \title{bbmle News}
 \encoding{UTF-8}
 
+\section{CHANGES IN VERSION 1.0.7 }{
+  \itemize{
+     \item warn on convergence failure
+   }
+}
+
 \section{CHANGES IN VERSION 1.0.6 }{
   \itemize{
      \item fixed (fairly obscure) bug in assigning data environment to

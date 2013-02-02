@@ -535,6 +535,23 @@ mle2 <- function(minuslogl,
         oout$eratio <- min(ev)/max(ev)
     }
   }
+  if (!is.null(conv <- oout$conv) &&
+      ((optimizer=="nlm" && conv>2) ||
+       (optimizer!="nlm" && conv!=0))) {
+      ## warn of convergence failure
+      if (is.null(oout$message)) {
+          cmsg <- "unknown convergence failure: refer to optimizer documentation"
+          if (optimizer=="optim") {
+              if (conv==1) cmsg <- "iteration limit 'maxit' reached"
+              if (conv==10) cmsg <- "degenerate Nelder-Mead simplex"
+          } else if (optimizer=="nlm") {
+              if (conv==3) cmsg <- "last global step failed to locate a point lower than 'estimate': see ?nlm"
+              if (conv==4) cmsg <- "iteration limit exceeded"
+              if (conv==5) cmsg <- "maximum step size 'stepmax' exceeded five consecutive times: see ?nlm"
+          }
+      } else cmsg <- oout$message
+      warning(paste0("convergence failure: code=",conv," (",cmsg,")"))
+  }
   m <- new("mle2", call=call, call.orig=call.orig, coef=coef, fullcoef=unlist(fullcoef), vcov=tvcov,
            min=min, details=oout, minuslogl=minuslogl, method=method,
            optimizer=optimizer,data=as.list(data),formula=formula)
