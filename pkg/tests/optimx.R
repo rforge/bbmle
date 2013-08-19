@@ -16,6 +16,7 @@ suppressWarnings(m1 <- mle2(minuslogl=y~dpois(lambda=ymax/(1+x/xhalf)),
 ## FIXME!! fails (although not with an error, because
 ##  errors are caught by profiling) due to npar now
 ## being restricted to >1 in optimx 2012.05.24 ...
+
 suppressWarnings(head(as.data.frame(profile(m1))))
 detach("package:optimx")
 options(old_opt)

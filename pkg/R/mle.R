@@ -444,18 +444,18 @@ mle2 <- function(minuslogl,
                      nlm="minimum",
                      optimize=, optimise=, nlminb="objective")
   if (optimizer=="optimx") {
-    fvals <- unlist(oout$fvalues)
-    conv <- unlist(oout$conv)
+    fvals <- oout[["value"]]
+    conv <- oout[["convcode"]]
     ## best <- if (!any(conv==0)) {
     best <- which.min(fvals)
     ##    } else {
     ## fvals <- fvals[conv==0]
     ## which.min(fvals)
     ## }
-    oout <- list(par=oout$par[[best]],
+    oout <- list(par=as.numeric(unlist(oout[best,1:attr(oout,"npar")])),
                  value=fvals[best],
                  convergence=conv[best],
-                 method.used=oout$method[[best]])
+                 method.used=attr(oout,"details")[,"method"][[best]])
     ## FIXME: should do profiles only with best method for MLE?
   }
   if (optimizer=="nlm") {
