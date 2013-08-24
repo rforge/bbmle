@@ -7,6 +7,7 @@
 %\VignetteDepends{lattice}
 %\VignetteEngine{knitr::knitr}
 \usepackage[utf8]{inputenc} % for UTF-8/single quotes from sQuote()
+\usepackage[english]{babel} % for texi2dvi ~ bug
 \usepackage{graphicx}
 \usepackage{natbib}
 \usepackage{array}
@@ -97,7 +98,7 @@ Load the \code{emdbook} package
 to get functions for the beta-binomial distribution (random-deviate 
 function \code{rbetabinom} --- these functions are also available
 in Jim Lindsey's \code{rmutil} package).
-<<emdbook>>=
+<<emdbook,message=FALSE>>=
 library(emdbook)
 @  
 
@@ -439,14 +440,14 @@ gg1 <- ggplot(frogdat,aes(x=size,y=killed))+geom_point()+
       labs(size="#")+scale_x_continuous(limits=c(0,40))
 @ 
 
-<<frogfit1,cache=TRUE>>=
+<<frogfit1,cache=TRUE,warning=FALSE>>=
 m3 <- mle2(killed~dbinom(prob=c*(size/d)^g*exp(1-size/d),
   size=initial),data=frogdat,start=list(c=0.5,d=5,g=1))
 pdat <- data.frame(size=1:40,initial=rep(10,40))
 pdat1 <- data.frame(pdat,killed=predict(m3,newdata=pdat))
 @
 
-<<frogfit2,cache=TRUE>>=
+<<frogfit2,cache=TRUE,warning=FALSE>>=
 m4 <- mle2(killed~dbinom(prob=c*((size/d)*exp(1-size/d))^g,
   size=initial),data=frogdat,start=list(c=0.5,d=5,g=1))
 pdat2 <- data.frame(pdat,killed=predict(m4,newdata=pdat))
@@ -457,7 +458,7 @@ gg1 + geom_line(data=pdat1,colour="red")+
       geom_line(data=pdat2,colour="blue")
 @ 
 
-<<frogfit2anal>>=
+<<frogfit2anal,warning=FALSE>>=
 coef(m4)
 prof4 <- profile(m4)
 @ 

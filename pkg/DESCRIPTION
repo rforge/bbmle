@@ -1,7 +1,7 @@
 Package: bbmle
 Title: Tools for general maximum likelihood estimation
-Version: 1.0.11
-Date: 2013/08/19
+Version: 1.0.14
+Date: 2013/08/24
 Author: Ben Bolker <bolker@mcmaster.ca>, R Development Core Team
 Maintainer: Ben Bolker <bolker@mcmaster.ca>
 Depends:
