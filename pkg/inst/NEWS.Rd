@@ -4,6 +4,11 @@
 \title{bbmle News}
 \encoding{UTF-8}
 
+\section{Changes in version 1.0.11 (2013-08-19)}{
+  \itemize{
+    \item add .Rbuildignore for CRAN tests
+  }
+}
 \section{Changes in version 1.0.10 (2013-08-18)}{
   \itemize{
     \item adapt to updated optimx
