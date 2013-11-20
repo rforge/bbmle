@@ -4,6 +4,13 @@
 \title{bbmle News}
 \encoding{UTF-8}
 
+\section{Changes in version 1.0.15 (2013-11-20)}{
+  \itemize{
+    \item add \code{logLik} option to IC tables, more use of \code{nobs} methods
+    \item minor improvements to \code{slice} functionality
+  }
+}
+
 \section{Changes in version 1.0.14 (2013-08-24)}{
   \itemize{
     \item more CRAN tweaks
