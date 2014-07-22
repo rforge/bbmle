@@ -253,14 +253,18 @@ slice2D <- function(params,
                     lower=-Inf,
                     upper=Inf,
                     cutoff=10,
-                    verbose=TRUE,...) {
+                    verbose=TRUE,
+                    tranges=NULL,
+                    ...) {
   npv <- length(params)
   if (is.null(pn <- names(params))) pn <- seq(npv)
-  tranges <- get_all_trange(params,fun,
-                            rep(lower,length.out=npv),
-                            rep(upper,length.out=npv),
-                            cutoff=cutoff,
-                            ...)
+  if (is.null(tranges)) {
+      tranges <- get_all_trange(params,fun,
+                                rep(lower,length.out=npv),
+                                rep(upper,length.out=npv),
+                                cutoff=cutoff,
+                                ...)
+  }
   slices <- list()
   for (i in 1:(npv-1)) {
     slices[[i]] <- vector("list",npv)
@@ -337,9 +341,10 @@ splom.slice <- function(x,
                              function(x)
                              if (is.null(x)) NULL else x[["z"]])
                     }))
-    min.z <- min(all.z)
+    min.z <- min(all.z[is.finite(all.z)])
     ## round up to next multiple of 'dstep'
-    max.z <- dstep * ((max(all.z)-min(all.z)) %/% dstep + 1)
+    max.z <- dstep * ((max(all.z[is.finite(all.z)])-
+                       min.z) %/% dstep + 1)
     if (missing(at)) {
       at <- seq(0,max.z,by=dstep)
     }
