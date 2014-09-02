@@ -372,7 +372,8 @@ splom.slice <- function(x,
   }
   ## FIXME: use ?draw.colorkey to add a legend ...
   ## FIXME: make diagonal panel text smaller ???
-  splom(smat,lower.panel=lp0,diag.panel=diag.panel.splom,upper.panel=up0)
+  splom(smat,lower.panel=lp0,diag.panel=diag.panel.splom,
+        upper.panel=up0,...)
 }
 
   
